@@ -1,6 +1,7 @@
 package com.nhat.demoSpringbooRestApi.dtos;
 
 import com.nhat.demoSpringbooRestApi.models.Category;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -19,7 +20,7 @@ public class ProductRequestDTO {
     @Size(min = 5, message = "name product asleast 5 character")
     private String name;
 
-    @NotNull
+    @NotNull(message = "field not null")
     private  float price;
 
     private String description;
@@ -27,6 +28,7 @@ public class ProductRequestDTO {
     private  String image;
 
     @NotNull
+    @Min(value = 1)
     private int categoryId;
 
 

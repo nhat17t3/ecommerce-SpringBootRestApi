@@ -18,7 +18,7 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    @GetMapping
+    @GetMapping("")
     public ResponseEntity<List<Category>> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
@@ -42,7 +42,7 @@ public class CategoryController {
         Category category = new Category();
         category.setName(requestDTO.getName());
         category.setCode((requestDTO.getCode()));
-
+//sai rồi nha, truyền CategoryRequestDTO làm tham so cho createCategory
         Category createdCategory = categoryService.createCategory(category);
 
         CategoryResponseDTO responseDTO = new CategoryResponseDTO(createdCategory.getId(), createdCategory.getName());

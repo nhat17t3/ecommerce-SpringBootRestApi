@@ -21,9 +21,7 @@ public class CommentController {
 
     @GetMapping("/getAll")
     public ResponseEntity<List<Comment>> getAllComments() {
-
         List<Comment> commentResponse = commentService.getAllComments();
-
         return new ResponseEntity<List<Comment>>(commentResponse, HttpStatus.OK);
     }
 
@@ -48,7 +46,6 @@ public class CommentController {
 
     @PutMapping("")
     public ResponseEntity<Comment> updateComment(@Valid @RequestBody CommentRequestDTO comment) {
-
         Comment savedComment = commentService.updateComment(comment);
         return new ResponseEntity<Comment>(savedComment, HttpStatus.OK);
     }
@@ -59,7 +56,6 @@ public class CommentController {
         UserProductKey userProductKey = new UserProductKey(userId, productId);
         String message = commentService.deleteComment(userProductKey);
         return new ResponseEntity<String>(message, HttpStatus.OK);
-
     }
 
 

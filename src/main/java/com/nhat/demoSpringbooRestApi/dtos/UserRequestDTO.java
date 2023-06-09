@@ -2,6 +2,7 @@ package com.nhat.demoSpringbooRestApi.dtos;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,12 +19,15 @@ public class UserRequestDTO {
 
     @NotBlank
     private String name;
+
     private int age;
 
     @Email
     private String email;
+
+    @NotBlank
     private String password;
 
-    @NotNull
+    @NotEmpty
     private Set<Integer> roles = new HashSet<>();
 }

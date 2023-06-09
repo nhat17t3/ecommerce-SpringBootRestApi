@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
         user.setName(userRequestDTO.getName());
         user.setAge(userRequestDTO.getAge());
         user.setEmail(userRequestDTO.getEmail());
-        user.setPassword(userRequestDTO.getPassword());
+//        user.setPassword(userRequestDTO.getPassword());
         Set<Role> roles = new HashSet<>();
         for (Integer roleId : userRequestDTO.getRoles()) {
             Role role = roleService.findRoleById(roleId);

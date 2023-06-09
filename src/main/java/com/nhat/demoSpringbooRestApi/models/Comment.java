@@ -1,6 +1,7 @@
 package com.nhat.demoSpringbooRestApi.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,15 +21,16 @@ public class Comment {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("userId")
-    @JoinColumn(name = "user_id")
+//    @JoinColumn(name = "user_id")
     private User user;
 
 
     @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("productId")
-    @JoinColumn(name = "product_id")
+//    @JoinColumn(name = "product_id")
     private Product product;
 
+    @NotBlank
     private String content;
 
     @Column(name = "created_at")

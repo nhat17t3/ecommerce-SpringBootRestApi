@@ -1,5 +1,6 @@
 package com.nhat.demoSpringbooRestApi.models;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,10 +14,10 @@ import java.io.Serializable;
 @Embeddable
 public class UserProductKey implements Serializable {
 
-
+    @Column(name = "user_id")
     private int userId;
 
-    //	@Column(name = "product_id")
+    @Column(name = "product_id")
     private int productId;
 
     @Override

@@ -25,7 +25,7 @@ public class SwaggerConfig {
                         .version("v1.0.0")
                         .contact(new Contact().name("Hoang Long Nhat"))
                         .license(new License().name("License").url("/")))
-                .externalDocs(new ExternalDocumentation().description("Demo Rest API spring boot Documentation")
+                        .externalDocs(new ExternalDocumentation().description("Demo Rest API spring boot Documentation")
                         .url("http://localhost:8080/swagger-ui/index.html"));
     }
 
