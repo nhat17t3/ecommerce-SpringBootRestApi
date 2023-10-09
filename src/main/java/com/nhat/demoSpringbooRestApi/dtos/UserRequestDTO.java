@@ -15,7 +15,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserRequestDTO {
-    private int id;
+//    private int id;
 
     @NotBlank
     private String name;

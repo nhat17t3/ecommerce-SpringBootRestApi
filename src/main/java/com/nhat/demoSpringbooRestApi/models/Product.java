@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -28,6 +29,7 @@ public class Product {
     @Size(min = 3, message = "Product name must contain atleast 3 characters")
     private String name;
 
+    @NotBlank
     private float price;
 
     private String description;
@@ -43,5 +45,9 @@ public class Product {
 
 //    @JsonIgnore
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Comment> comments = new HashSet<>();
+    private List<Comment> comments;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "product", cascade =  CascadeType.ALL )
+    private Set<OrderDetail> orderDetails;
 }

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductRequestDTO {
 
-    private int id;
+//    private int id;
 
     @NotBlank
     @Size(min = 5, message = "name product asleast 5 character")

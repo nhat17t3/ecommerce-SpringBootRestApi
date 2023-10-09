@@ -1,5 +1,6 @@
 package com.nhat.demoSpringbooRestApi.models;
 
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -25,9 +26,15 @@ public class Role {
     @Size(min = 5, message = "Role name must contain atleast 5 characters")
     private String name;
 
-    @JsonIgnore
-    @ManyToMany(mappedBy = "roles", cascade = CascadeType.ALL)
-    private Set<User> users = new HashSet<>();
+//    @JsonIgnore
+//    @ManyToMany(mappedBy = "roles", cascade = CascadeType.ALL)
+//    private Set<User> users = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(name = "role_permission",
+            joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "id"))
+    private Set<Permission> permissions = new HashSet<>();
 
 
 }

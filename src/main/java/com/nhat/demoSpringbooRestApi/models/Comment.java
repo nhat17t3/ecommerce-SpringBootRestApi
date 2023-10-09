@@ -1,5 +1,6 @@
 package com.nhat.demoSpringbooRestApi.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,6 +26,7 @@ public class Comment {
     private User user;
 
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("productId")
 //    @JoinColumn(name = "product_id")
@@ -38,6 +40,8 @@ public class Comment {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+
 
 
 }

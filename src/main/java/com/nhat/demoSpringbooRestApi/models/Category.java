@@ -19,8 +19,8 @@ public class Category {
     @Size(min = 5, message = "Category name must contain atleast 5 characters")
     private String name;
 
-    @NotBlank
-    @Size(min = 5, message = "Category code must contain atleast 5 characters")
+//    @NotBlank
+//    @Size(min = 5, message = "Category code must contain atleast 5 characters")
     private String code;
 
     @JsonIgnore
