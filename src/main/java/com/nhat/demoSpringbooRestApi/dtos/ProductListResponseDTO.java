@@ -1,5 +1,6 @@
 package com.nhat.demoSpringbooRestApi.dtos;
 
+import com.nhat.demoSpringbooRestApi.models.Product;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductListResponseDTO {
 
-    private List<ProductRequestDTO> content;
+    private List<Product> content;
     private Integer pageNumber;
     private Integer pageSize;
     private Long totalElements;

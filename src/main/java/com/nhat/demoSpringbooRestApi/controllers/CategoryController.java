@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/categories")
+@RequestMapping("/api/categories")
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;
@@ -39,19 +39,14 @@ public class CategoryController {
 
     @PostMapping
     public ResponseEntity<CategoryResponseDTO> createCategory(@Valid @RequestBody CategoryRequestDTO requestDTO) {
-        Category category = new Category();
-        category.setName(requestDTO.getName());
-        category.setCode((requestDTO.getCode()));
-//sai rồi nha, truyền CategoryRequestDTO làm tham so cho createCategory
-        Category createdCategory = categoryService.createCategory(category);
-
+        Category createdCategory = categoryService.createCategory(requestDTO);
         CategoryResponseDTO responseDTO = new CategoryResponseDTO(createdCategory.getId(), createdCategory.getName());
         return ResponseEntity.ok(responseDTO);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Category> updateCategory(@PathVariable int id, @Valid @RequestBody Category category) {
-        Category updatedCategory = categoryService.updateCategory(id, category);
+    public ResponseEntity<Category> updateCategory(@PathVariable int id, @Valid @RequestBody CategoryRequestDTO categoryRequestDTO) {
+        Category updatedCategory = categoryService.updateCategory(id, categoryRequestDTO);
         return ResponseEntity.ok(updatedCategory);
     }
 

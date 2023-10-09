@@ -1,6 +1,5 @@
 package com.nhat.demoSpringbooRestApi.repositories;
 
-import com.nhat.demoSpringbooRestApi.models.Product;
 import com.nhat.demoSpringbooRestApi.models.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +18,9 @@ public interface UserRepo extends JpaRepository<User, Integer> {
 
     Optional<User> findByName(String name);
 
-    Optional<User> findByEmail( String email);
+    User findByEmail(String email);
+
+    @Query(value = "SELECT e FROM User e JOIN e.roles r WHERE e.id = ?1 ")
+    Optional<User> findById( Integer id);
 
 }

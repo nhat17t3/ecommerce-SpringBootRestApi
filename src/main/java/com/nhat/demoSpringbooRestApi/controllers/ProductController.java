@@ -6,14 +6,19 @@ import com.nhat.demoSpringbooRestApi.dtos.ProductRequestDTO;
 import com.nhat.demoSpringbooRestApi.models.Product;
 import com.nhat.demoSpringbooRestApi.services.ProductService;
 import jakarta.validation.Valid;
+import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.FileNotFoundException;
+
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/api/products")
 public class ProductController {
 
     @Autowired
@@ -51,6 +56,16 @@ public class ProductController {
     public ResponseEntity<String> deleteProduct(@PathVariable Integer productId) {
         String message = productService.deleteProduct(productId);
         return new ResponseEntity<String>(message, HttpStatus.OK);
+    }
+
+    @GetMapping("/report/{format}")
+    public ResponseEntity generateReportPDF(@PathVariable String format) throws FileNotFoundException, JRException {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_PDF);
+//        MediaType media = new MediaType("application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+//        httpHeaders.setContentType(media);
+        byte[] reportStream =  productService.exportReportPDF(format);
+        return new ResponseEntity<>(reportStream, httpHeaders, HttpStatus.OK);
     }
 
 

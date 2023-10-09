@@ -3,6 +3,7 @@ package com.nhat.demoSpringbooRestApi.security;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import com.auth0.jwt.JWT;
@@ -23,6 +24,7 @@ public class JWTUtil {
                 .withSubject("User Details")
                 .withClaim("email", email)
                 .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
                 .withIssuer("Event Scheduler")
                 .sign(Algorithm.HMAC256(secret));
     }
@@ -36,4 +38,7 @@ public class JWTUtil {
 
         return jwt.getClaim("email").asString();
     }
+
+
+
 }

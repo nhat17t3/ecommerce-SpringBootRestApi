@@ -1,5 +1,6 @@
 package com.nhat.demoSpringbooRestApi.services;
 
+import com.nhat.demoSpringbooRestApi.dtos.CategoryRequestDTO;
 import com.nhat.demoSpringbooRestApi.models.Category;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +16,9 @@ public interface CategoryService{
 
     List<Category> findCategoryByName (String name);
 
-    Category createCategory (Category category);
+    Category createCategory (CategoryRequestDTO category);
 
-    Category updateCategory (int categoryId, Category category);
+    Category updateCategory (int categoryId, CategoryRequestDTO category);
 
     String deleteCategory (int categoryId);
 }
