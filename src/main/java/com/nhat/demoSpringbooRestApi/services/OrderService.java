@@ -4,9 +4,6 @@ import com.nhat.demoSpringbooRestApi.dtos.OrderListResponseDTO;
 import com.nhat.demoSpringbooRestApi.dtos.OrderRequestDTO;
 import com.nhat.demoSpringbooRestApi.models.EOrderStatus;
 import com.nhat.demoSpringbooRestApi.models.Order;
-import net.sf.jasperreports.engine.JRException;
-
-import java.io.FileNotFoundException;
 
 public interface OrderService {
 
@@ -17,5 +14,9 @@ public interface OrderService {
     Order createOrder (OrderRequestDTO order);
     Order updateOrder(Integer orderId, OrderRequestDTO order);
     String deleteOrder (Integer orderId);
+    String updateOrderStatus(Integer orderId, String status);
+    public void updateAllOrderStatusFromShip24();
+    public String updateTrackingNumberForOrder(int orderId, String trackingNumber);
 
+    public void updatePaymentStatus(Integer orderId, String paymentStatus);
 }

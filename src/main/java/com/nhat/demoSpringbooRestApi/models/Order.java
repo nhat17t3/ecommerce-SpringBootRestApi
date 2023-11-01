@@ -28,22 +28,31 @@ public class Order {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
-    private Float totalPrice;
+    private String nameReceiver;
 
-    private EOrderStatus orderStatus;
+    private String phoneReceiver;
+
+    private String addressReceiver;
+
+    private Float totalPrice;
 
     @NotNull
     @ManyToOne
     @JoinColumn(name = "paymentMethod_id", referencedColumnName = "id")
     private PaymentMethod paymentMethod;
 
-    private EPaymentStatus paymentStatus;
+    private String paymentStatus;
 
-    private String nameReceiver;
+//    private EPaymentStatus paymentStatus;
 
-    private String phoneReceiver;
+    @OneToMany(mappedBy = "order", cascade =  CascadeType.ALL )
+    private List<OrderDetail> orderDetails;
 
-    private String addressReceiver;
+    private String orderStatus;
+
+    private String trackingNumber;
+
+    private String trackerId;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -51,8 +60,6 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "order", cascade =  CascadeType.ALL )
-    private List<OrderDetail> orderDetails;
 
 
 }
