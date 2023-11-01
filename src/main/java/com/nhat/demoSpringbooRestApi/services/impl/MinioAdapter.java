@@ -1,8 +1,12 @@
 package com.nhat.demoSpringbooRestApi.services.impl;
 
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
+import io.minio.*;
+import io.minio.errors.*;
+import io.minio.http.Method;
 import io.minio.messages.Bucket;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
+import io.minio.messages.Item;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
@@ -11,8 +15,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class MinioAdapter {
@@ -26,56 +35,172 @@ public class MinioAdapter {
     @Value("${minio.default.folder}")
     String defaultBaseFolder;
 
-    public List<Bucket> getAllBuckets() {
-        System.out.println("test minio");
-        try {
-            System.out.println("test minio");
-            return minioClient.listBuckets();
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+    /**
+     * Check if the bucket exists  * * @param bucketName  Bucket name  * @return
+     */
+    public boolean bucketExists(String bucketName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        boolean found =
+                minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+        return found;
+    }
+
+    public boolean makeBucket(String bucketName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        boolean flag = bucketExists(bucketName);
+        if (!flag) {
+            minioClient.makeBucket(
+                    MakeBucketArgs.builder()
+                            .bucket(bucketName)
+                            .build());
+
+            return true;
+        } else {
+            return false;
         }
-
-    }
-
-
-    @SneakyThrows
-    public void uploadFile(String name, byte[] content) {
-//        File file = new File("D:\\lap trinh java\\demoSpringbooRestApi\\tmp " + name);
-//        file.canWrite();
-//        file.canRead();
-//        try {
-//            FileOutputStream iofs = new FileOutputStream(file);
-//            iofs.write(content);
-//            minioClient.putObject(defaultBucketName, defaultBaseFolder + name, file.getAbsolutePath());
-////            minioClient.putObject(defaultBucketName, defaultBaseFolder, name);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e.getMessage());
-//        }
-
-        InputStream inputStream = new ByteArrayInputStream(content);
-        minioClient.putObject(
-                PutObjectArgs.builder().bucket("test1").object(name).stream(
-                                inputStream, -1,5242880 )
-                        .build());
-
-
     }
 
     @SneakyThrows
-    public byte[] getFile(String key) {
-//        try {
-//            InputStream obj = minioClient.getObject(defaultBucketName, defaultBaseFolder + "/" + key);
-//
-//            byte[] content = IOUtils.toByteArray(obj);
-//            obj.close();
-//            return content;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+    public List<String> listBucketNames() {
+        List<Bucket> bucketList = minioClient.listBuckets();
+        List<String> bucketListName = new ArrayList<>();
+        for (Bucket bucket : bucketList) {
+            bucketListName.add(bucket.name());
+        }
+        return bucketListName;
+    }
+
+    @SneakyThrows
+    public boolean removeBucket(String bucketName) {
+        boolean flag = bucketExists(bucketName);
+        if (flag) {
+            Iterable<Result<Item>> myObjects = listObjects(bucketName);
+            for (Result<Item> result : myObjects) {
+                Item item = result.get();
+                //  There are object files , Delete failed
+                if (item.size() > 0) {
+                    return false;
+                }
+            }
+            //  Delete buckets , Be careful , Only when the bucket is empty can it be deleted successfully .
+            minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+            flag = bucketExists(bucketName);
+            return !flag;
+        }
+        return false;
+    }
+
+    @SneakyThrows
+    public Iterable<Result<Item>> listObjects(String bucketName) {
+        boolean flag = bucketExists(bucketName);
+        if (flag) {
+            return minioClient.listObjects(
+                    ListObjectsArgs.builder().bucket(bucketName).build());
+        }
         return null;
     }
 
-    @PostConstruct
-    public void init() {
+    @SneakyThrows
+    public Iterable<Result<Item>> listObjects(String bucketName, String prefix) {
+        boolean flag = bucketExists(bucketName);
+        if (flag) {
+            return minioClient.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .prefix(prefix)
+                            .includeUserMetadata(false)
+                            .recursive(true)
+                            .build());
+        }
+        return null;
     }
+
+
+
+    /**
+     * Upload files  * * @param bucketName * @param multipartFile
+     */
+    public void putObject(String bucketName, InputStream inputStream, String objectname, String fileType) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+//        InputStream inputStream = new ByteArrayInputStream(data);
+        minioClient.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectname).stream(
+                                inputStream, -1, 10485760)
+                        .contentType(fileType)
+                        .build());
+    }
+
+    /**
+     * File access path  * * @param bucketName  Bucket name  * @param objectName  The name of the object in the bucket  * @return
+     */
+    public String getObjectUrl(String bucketName, String objectName, int duration) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        boolean flag = bucketExists(bucketName);
+        String url = "";
+        if (flag) {
+            url = minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .expiry(duration, TimeUnit.DAYS)
+                            .build());
+        }
+        return url;
+    }
+
+    @SneakyThrows
+    public boolean removeObject(String bucketName, String objectName) {
+        boolean flag = bucketExists(bucketName);
+        if (flag) {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+            return true;
+        }
+        return false;
+    }
+
+    public InputStream getObject(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        boolean flag = bucketExists(bucketName);
+        if (flag) {
+            StatObjectResponse statObject = statObject(bucketName, objectName);
+            if (statObject != null && statObject.size() > 0) {
+                return minioClient.getObject(
+                        GetObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object(objectName)
+                                .build());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the metadata of the object  * * @param bucketName  Bucket name  * @param objectName  The name of the object in the bucket  * @return
+     */
+    @SneakyThrows
+    public StatObjectResponse statObject(String bucketName, String objectName) {
+        boolean flag = bucketExists(bucketName);
+        if (flag) {
+            return minioClient.statObject(
+                    StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        }
+        return null;
+    }
+
+    @SneakyThrows
+    public boolean removeObject(String bucketName, List<String> objectNames) {
+        boolean flag = bucketExists(bucketName);
+        if (flag) {
+            List<DeleteObject> objects = new LinkedList<>();
+            for (int i = 0; i < objectNames.size(); i++) {
+                objects.add(new DeleteObject(objectNames.get(i)));
+            }
+            Iterable<Result<DeleteError>> results =
+                    minioClient.removeObjects(
+                            RemoveObjectsArgs.builder().bucket(bucketName).objects(objects).build());
+            for (Result<DeleteError> result : results) {
+                result.get();
+            }
+        }
+        return true;
+    }
+
+
 }

@@ -5,6 +5,7 @@ import com.nhat.demoSpringbooRestApi.dtos.CategoryRequestDTO;
 import com.nhat.demoSpringbooRestApi.models.Category;
 import com.nhat.demoSpringbooRestApi.services.CategoryService;
 import jakarta.validation.Valid;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/categories")
 public class CategoryController {
+
+    private static final Logger logger = Logger.getLogger(CategoryController.class);
     @Autowired
     private CategoryService categoryService;
 

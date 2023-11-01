@@ -4,7 +4,9 @@ import com.nhat.demoSpringbooRestApi.dtos.ProductListResponseDTO;
 import com.nhat.demoSpringbooRestApi.dtos.ProductRequestDTO;
 import com.nhat.demoSpringbooRestApi.exceptions.ResourceNotFoundException;
 import com.nhat.demoSpringbooRestApi.models.Category;
+import com.nhat.demoSpringbooRestApi.models.Image;
 import com.nhat.demoSpringbooRestApi.models.Product;
+import com.nhat.demoSpringbooRestApi.repositories.ImageRepo;
 import com.nhat.demoSpringbooRestApi.repositories.ProductRepo;
 import com.nhat.demoSpringbooRestApi.services.CategoryService;
 import com.nhat.demoSpringbooRestApi.services.ProductService;
@@ -27,13 +29,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,7 +48,13 @@ public class ProductServiceImpl implements ProductService {
     private CategoryService categoryService;
 
     @Autowired
+    protected ImageRepo imageRepo;
+
+    @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    MinIOService minIOService;
 
     @Override
     public ProductListResponseDTO getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
@@ -141,35 +149,78 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product createProduct(ProductRequestDTO productRequestDTO) {
+    public Product createProduct(ProductRequestDTO productRequestDTO , MultipartFile imagePrimary, MultipartFile[] moreImages) {
         Category category = categoryService.findCategoryById(productRequestDTO.getCategoryId());
 
-        Product product = modelMapper.map(productRequestDTO, Product.class);
+        Product product;
+        product = modelMapper.map(productRequestDTO, Product.class);
         product.setCategory(category);
+        Product newProduct =  productRepo.save(product);
 
-        return productRepo.save(product);
+        String imagePrimaryUrl = minIOService.uploadFile(imagePrimary);
+        Image image1 = new Image();
+        image1.setImagePath(imagePrimaryUrl);
+        image1.setIsPrimary(true);
+        image1.setProduct(product);
+        imageRepo.save(image1);
+        for (MultipartFile moreImage : moreImages) {
+            System.out.println("Uploading image: " + moreImage.getOriginalFilename());  // In ra tên ảnh
+            String imageUrl = minIOService.uploadFile(moreImage);
+            Image image = new Image();
+            image.setImagePath(imageUrl);
+            image.setProduct(product);
+            imageRepo.save(image);
+        }
+
+        Product existingProduct = getProductById(newProduct.getId());
+
+        return getProductById(newProduct.getId());
     }
 
     @Override
-    public Product updateProduct(Integer productId, ProductRequestDTO productRequestDTO) {
-        Product product = getProductById(productId);
+    public Product updateProduct(Integer productId, ProductRequestDTO productRequestDTO , MultipartFile imagePrimary, MultipartFile[] moreImages) {
+        Product existingProduct = getProductById(productId);
         Category category = categoryService.findCategoryById(productRequestDTO.getCategoryId());
+        existingProduct.setCategory(category);
+        existingProduct.setName(productRequestDTO.getName());
+        existingProduct.setPrice(productRequestDTO.getPrice());
+        existingProduct.setDescription(productRequestDTO.getDescription());
 
-//        product = modelMapper.map(productRequestDTO, Product.class);
-        product.setName(productRequestDTO.getName());
-        product.setPrice(productRequestDTO.getPrice());
-        product.setDescription(productRequestDTO.getDescription());
-        product.setImage(productRequestDTO.getImage());
-        product.setCategory(category);
-        return productRepo.save(product);
+        List<Image> images = new ArrayList<>();
+        // Nếu có ảnh chính mới, cập nhật
+        if (imagePrimary != null) {
+            imageRepo.delete(imageRepo.findByProductIdAndIsPrimary(productId,true));
+            String imagePrimaryUrl = minIOService.uploadFile(imagePrimary);
+            Image image1 = new Image();
+            image1.setImagePath(imagePrimaryUrl);
+            image1.setIsPrimary(true);
+            imageRepo.save(image1);
+        }
+
+        // Nếu có thêm ảnh mới, cập nhật
+        if (moreImages != null && moreImages.length > 0) {
+            imageRepo.deleteAll(imageRepo.findByProductId(productId));
+            List<String> moreImagesUrls = new ArrayList<>();
+
+            for (MultipartFile moreImage : moreImages) {
+                System.out.println("Uploading image: " + moreImage.getOriginalFilename());
+                String imageUrl = minIOService.uploadFile(moreImage);
+                Image image = new Image();
+                image.setImagePath(imageUrl);
+                imageRepo.save(image);
+                images.add(image);
+            }
+            existingProduct.setImages(images);
+        }
+        return productRepo.save(existingProduct);
     }
 
     @Override
     public String deleteProduct(Integer productId) {
         Product existingProduct = getProductById(productId);
+        imageRepo.deleteAll(imageRepo.findByProductId(productId));
         productRepo.delete(existingProduct);
         return "Product with productId: " + productId + " deleted successfully !!!";
-
     }
 
     @Override

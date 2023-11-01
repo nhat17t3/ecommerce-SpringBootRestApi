@@ -14,11 +14,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/products")
 public class ProductController {
 
     @Autowired
@@ -40,15 +41,45 @@ public class ProductController {
         return new ResponseEntity<Product>(product, HttpStatus.OK);
     }
 
-    @PostMapping("")
-    public ResponseEntity<Product> addProduct(@Valid @RequestBody ProductRequestDTO product) {
-        Product savedProduct = productService.createProduct(product);
+//    @PostMapping("")
+//    public ResponseEntity<Product> addProduct(@Valid @RequestBody ProductRequestDTO product) {
+//        Product savedProduct = productService.createProduct(product);
+//        return new ResponseEntity<Product>(savedProduct, HttpStatus.CREATED);
+//    }
+
+    @PostMapping()
+    public ResponseEntity<Product> addProduct(@RequestParam(name = "name") String name,
+                                              @RequestParam(name = "description") String description,
+                                              @RequestParam(name = "price") Float price,
+                                              @RequestParam(name = "categoryId") Integer categoryId,
+                                              @RequestParam(name = "imagePrimary") MultipartFile imagePrimary,
+                                              @RequestParam(name = "moreImages") MultipartFile[] moreImages) {
+        ProductRequestDTO productRequestDTO = new ProductRequestDTO();
+        productRequestDTO.setName(name);
+        productRequestDTO.setPrice(price);
+        productRequestDTO.setDescription(description);
+        productRequestDTO.setCategoryId(categoryId);
+
+        Product savedProduct = productService.createProduct(productRequestDTO,imagePrimary,moreImages);
         return new ResponseEntity<Product>(savedProduct, HttpStatus.CREATED);
     }
 
     @PutMapping("/{productId}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Integer productId, @Valid @RequestBody ProductRequestDTO product) {
-        Product savedProduct = productService.updateProduct(productId, product);
+    public ResponseEntity<Product> updateProduct(@PathVariable Integer productId,
+                                                 @RequestParam(name = "name") String name,
+                                                 @RequestParam(name = "description") String description,
+                                                 @RequestParam(name = "price") Float price,
+                                                 @RequestParam(name = "categoryId") Integer categoryId,
+                                                 @RequestParam(name = "imagePrimary") MultipartFile imagePrimary,
+                                                 @RequestParam(name = "moreImages") MultipartFile[] moreImages) {
+
+        ProductRequestDTO productRequestDTO = new ProductRequestDTO();
+        productRequestDTO.setName(name);
+        productRequestDTO.setPrice(price);
+        productRequestDTO.setDescription(description);
+        productRequestDTO.setCategoryId(categoryId);
+
+        Product savedProduct = productService.updateProduct(productId, productRequestDTO, imagePrimary, moreImages);
         return new ResponseEntity<Product>(savedProduct, HttpStatus.OK);
     }
 

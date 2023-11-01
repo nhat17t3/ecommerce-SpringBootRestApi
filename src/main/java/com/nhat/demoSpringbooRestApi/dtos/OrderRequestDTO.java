@@ -24,14 +24,17 @@ public class OrderRequestDTO {
     @NotNull
     private Float totalPrice;
 
-    @NotNull
-    private EOrderStatus orderStatus;
+
+    private String orderStatus;
 
     @NotNull
     private int paymentMethodId;
 
-    @NotNull
-    private EPaymentStatus paymentStatus;
+
+    private String paymentStatus;
+
+//    private EPaymentStatus paymentStatus;
+
 
     @NotNull
     private String nameReceiver;
@@ -44,5 +47,9 @@ public class OrderRequestDTO {
 
     @NotNull
     private Set<OrderDetailRequestDTO> orderDetailRequestDTO;
+
+    private String trackingNumber;
+
+    private String trackerId;
 
 }

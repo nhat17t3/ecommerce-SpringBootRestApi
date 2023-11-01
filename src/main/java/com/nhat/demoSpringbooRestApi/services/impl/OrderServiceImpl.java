@@ -13,14 +13,17 @@ import com.nhat.demoSpringbooRestApi.services.ProductService;
 import com.nhat.demoSpringbooRestApi.services.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -43,6 +46,16 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @Value("${ship24.apiKey}")
+    private String apiKey;
+
+
+    @Autowired
+    private WebClient ship24WebClient;
+
+    @Autowired
+    private  ShipmentService shipmentService;
 
     @Override
     public OrderListResponseDTO getAllOrders(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
@@ -132,6 +145,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order getOrderById(Integer orderId) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+
+        if(order.getTrackingNumber() != null){
+            shipmentService.updateOrderStatusFromShip24(order.getTrackingNumber());
+        }
         return orderRepo.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
     }
@@ -156,6 +175,8 @@ public class OrderServiceImpl implements OrderService {
             orderDetailRepository.save(orderDetail);
         }
 
+
+
         return order1;
     }
 
@@ -175,7 +196,7 @@ public class OrderServiceImpl implements OrderService {
         order.setNameReceiver(orderRequestDTO.getNameReceiver());
         order.setPhoneReceiver(orderRequestDTO.getPhoneReceiver());
         order.setAddressReceiver(orderRequestDTO.getAddressReceiver());
-        order.setCreatedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
 
         orderDetailRepository.deleteOrderDetailByOrderId(order.getId());
         for (OrderDetailRequestDTO orderDetailRequestDTO: orderRequestDTO.getOrderDetailRequestDTO()) {
@@ -198,5 +219,38 @@ public class OrderServiceImpl implements OrderService {
         return "Order with orderId: " + orderId + " deleted successfully !!!";
 
     }
+
+    @Override
+    public String updateOrderStatus(Integer orderId, String status) {
+        Order order = orderRepo.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        order.setOrderStatus(status);
+        return "update order-status success";
+    }
+
+    @Override
+    public void updateAllOrderStatusFromShip24() {
+        List<Order> orders = orderRepo.findAllByOrderStatus("pending");
+        for (Order order: orders) {
+            if(order.getTrackingNumber() != null){
+                shipmentService.updateOrderStatusFromShip24(order.getTrackingNumber());
+            }
+        }
+    }
+
+    @Override
+    public String updateTrackingNumberForOrder(int orderId, String trackingNumber) {
+        Order order = orderRepo.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        order.setTrackingNumber(trackingNumber);
+        shipmentService.createTracker(trackingNumber);
+        return "update tracking-number success";
+    }
+
+    @Override
+    public void updatePaymentStatus(Integer orderId, String paymentStatus) {
+        Order order = orderRepo.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        order.setPaymentStatus(paymentStatus);
+        orderRepo.save(order);
+    }
+
 
 }
