@@ -3,7 +3,9 @@ package com.nhat.demoSpringbooRestApi.services.impl;
 import com.nhat.demoSpringbooRestApi.dtos.CategoryRequestDTO;
 import com.nhat.demoSpringbooRestApi.exceptions.ResourceNotFoundException;
 import com.nhat.demoSpringbooRestApi.models.Category;
+import com.nhat.demoSpringbooRestApi.models.Product;
 import com.nhat.demoSpringbooRestApi.repositories.CategoryRepo;
+import com.nhat.demoSpringbooRestApi.repositories.ProductRepo;
 import com.nhat.demoSpringbooRestApi.services.CategoryService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,9 @@ public class CategoryServiceServiceImpl implements CategoryService {
 
     @Autowired
     private CategoryRepo categoryRepo;
+
+    @Autowired
+    private ProductRepo productRepo;
 
     @Autowired
     ModelMapper modelMapper;
@@ -46,14 +51,18 @@ public class CategoryServiceServiceImpl implements CategoryService {
     public Category updateCategory(int categoryId, CategoryRequestDTO categoryRequestDTO) {
         Category existingCategory = findCategoryById(categoryId);
         existingCategory.setName(categoryRequestDTO.getName());
-        existingCategory.setCode(categoryRequestDTO.getCode());
         return categoryRepo.save(existingCategory);
     }
 
     @Override
-    public String deleteCategory(int categoryId) {
+    public boolean checkBeforeDeleteCategory(int categoryId) {
+        List<Product> products = productRepo.checkBeforeDeleteCategory(categoryId);
+        return products.isEmpty();
+    }
+
+    @Override
+    public void deleteCategory(int categoryId) {
         Category existingCategory = findCategoryById(categoryId);
         categoryRepo.delete(existingCategory);
-        return "Categoty has id =" + categoryId + ": is deleted";
     }
 }

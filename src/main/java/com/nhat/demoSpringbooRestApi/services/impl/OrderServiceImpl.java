@@ -1,8 +1,6 @@
 package com.nhat.demoSpringbooRestApi.services.impl;
 
-import com.nhat.demoSpringbooRestApi.dtos.OrderDetailRequestDTO;
-import com.nhat.demoSpringbooRestApi.dtos.OrderListResponseDTO;
-import com.nhat.demoSpringbooRestApi.dtos.OrderRequestDTO;
+import com.nhat.demoSpringbooRestApi.dtos.*;
 import com.nhat.demoSpringbooRestApi.exceptions.ResourceNotFoundException;
 import com.nhat.demoSpringbooRestApi.models.*;
 import com.nhat.demoSpringbooRestApi.repositories.OrderDetailRepository;
@@ -23,123 +21,48 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class OrderServiceImpl implements OrderService {
-
     @Autowired
     private OrderRepository orderRepo;
-
     @Autowired
     private OrderDetailRepository orderDetailRepository;
-
     @Autowired
     private PaymentMethodService paymentMethodService;
-
     @Autowired
     private UserService userService;
-
     @Autowired
     private ProductService productService;
-
-
     @Autowired
     private ModelMapper modelMapper;
-
     @Value("${ship24.apiKey}")
     private String apiKey;
-
-
     @Autowired
     private WebClient ship24WebClient;
 
     @Autowired
-    private  ShipmentService shipmentService;
+    private TrackingShipmentService shipmentService;
+    @Autowired
+    private EmailService emailService;
 
     @Override
-    public OrderListResponseDTO getAllOrders(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-
-        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
-
+    public DataTableResponseDTO<Order> getAllOrders(OrderFilterRequestDTO orderFilterRequestDTO) {
+        Sort sortByAndOrder = orderFilterRequestDTO.getSortOrder().equalsIgnoreCase("asc")
+                ? Sort.by(orderFilterRequestDTO.getSortBy()).ascending()
+                : Sort.by(orderFilterRequestDTO.getSortBy()).descending();
+        Pageable pageDetails = PageRequest.of(orderFilterRequestDTO.getPageNumber(), orderFilterRequestDTO.getPageSize(), sortByAndOrder);
         Page<Order> pageOrders = orderRepo.findAll(pageDetails);
-
         List<Order> orders = pageOrders.getContent();
-
 //        List<OrderRequestDTO> orderRequestDTO = orders.stream().map(order -> modelMapper.map(order, OrderRequestDTO.class))
 //                .collect(Collectors.toList());
-
-        OrderListResponseDTO orderResponse = new OrderListResponseDTO();
-
+        DataTableResponseDTO<Order> orderResponse = new DataTableResponseDTO<Order>();
         orderResponse.setContent(orders);
         orderResponse.setPageNumber(pageOrders.getNumber());
         orderResponse.setPageSize(pageOrders.getSize());
         orderResponse.setTotalElements(pageOrders.getTotalElements());
         orderResponse.setTotalPages(pageOrders.getTotalPages());
         orderResponse.setLastPage(pageOrders.isLast());
-
-        return orderResponse;
-    }
-
-    @Override
-    public OrderListResponseDTO searchOrderByUserEmail(String email, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-
-        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
-
-        Page<Order> pageOrders = orderRepo.findByUserEmail(email, pageDetails);
-
-        List<Order> orders = pageOrders.getContent();
-
-//        if (orders.size() == 0) {
-//            throw new CustomException("Orders not found with category ID: " + categoryId);
-//        }
-
-//        List<OrderRequestDTO> orderRequestDTO = orders.stream().map(order -> modelMapper.map(order, OrderRequestDTO.class))
-//                .collect(Collectors.toList());
-
-        OrderListResponseDTO orderResponse = new OrderListResponseDTO();
-
-        orderResponse.setContent(orders);
-        orderResponse.setPageNumber(pageOrders.getNumber());
-        orderResponse.setPageSize(pageOrders.getSize());
-        orderResponse.setTotalElements(pageOrders.getTotalElements());
-        orderResponse.setTotalPages(pageOrders.getTotalPages());
-        orderResponse.setLastPage(pageOrders.isLast());
-
-        return orderResponse;
-    }
-
-    @Override
-    public OrderListResponseDTO searchOrderByOrderStatus(EOrderStatus eOrderStatus, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-
-        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
-
-        Page<Order> pageOrders = orderRepo.findByOrderStatus(eOrderStatus, pageDetails);
-
-        List<Order> orders = pageOrders.getContent();
-
-//        if (orders.size() == 0) {
-//            throw new CustomException("Orders not found with keyword: " + keyword);
-//        }
-
-//        List<OrderRequestDTO> orderRequestDTO = orders.stream().map(order -> modelMapper.map(order, OrderRequestDTO.class))
-//                .collect(Collectors.toList());
-
-        OrderListResponseDTO orderResponse = new OrderListResponseDTO();
-
-        orderResponse.setContent(orders);
-        orderResponse.setPageNumber(pageOrders.getNumber());
-        orderResponse.setPageSize(pageOrders.getSize());
-        orderResponse.setTotalElements(pageOrders.getTotalElements());
-        orderResponse.setTotalPages(pageOrders.getTotalPages());
-        orderResponse.setLastPage(pageOrders.isLast());
-
         return orderResponse;
     }
 
@@ -156,28 +79,27 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order createOrder(OrderRequestDTO orderRequestDTO) {
+    public Order createOrder(OrderRequestDTO orderRequestDTO) throws Exception {
         User user = userService.getUserById(orderRequestDTO.getUserId());
         PaymentMethod paymentMethod = paymentMethodService.findPaymentMethodById(orderRequestDTO.getPaymentMethodId());
-
         Order order = modelMapper.map(orderRequestDTO, Order.class);
         order.setUser(user);
         order.setPaymentMethod(paymentMethod);
-        Order order1 = orderRepo.save(order);
+        order.setCreatedAt(LocalDateTime.now());
+        Order newOrder = orderRepo.save(order);
 
         for (OrderDetailRequestDTO orderDetailRequestDTO: orderRequestDTO.getOrderDetailRequestDTO()) {
             Product product = productService.getProductById(orderDetailRequestDTO.getProductId());
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setProduct(product);
-            orderDetail.setOrder(order1);
+            orderDetail.setOrder(newOrder);
             orderDetail.setQuantity(orderDetailRequestDTO.getQuantity());
             orderDetail.setPrice(orderDetailRequestDTO.getPrice());
             orderDetailRepository.save(orderDetail);
         }
 
-
-
-        return order1;
+        emailService.sendEmailFromTemplate(newOrder.getUser().getEmail(),"mail-order","demoSpringboot order success",newOrder);
+        return newOrder;
     }
 
     @Override
@@ -185,8 +107,6 @@ public class OrderServiceImpl implements OrderService {
         Order order = getOrderById(orderId);
         User user = userService.getUserById(orderRequestDTO.getUserId());
         PaymentMethod paymentMethod = paymentMethodService.findPaymentMethodById(orderRequestDTO.getPaymentMethodId());
-
-//        order = modelMapper.map(orderRequestDTO, Order.class);
         order.setUser(user);
         order.setPaymentMethod(paymentMethod);
 
@@ -208,16 +128,20 @@ public class OrderServiceImpl implements OrderService {
             orderDetail.setPrice(orderDetailRequestDTO.getPrice());
             orderDetailRepository.save(orderDetail);
         }
-
         return orderRepo.save(order);
     }
 
     @Override
-    public String deleteOrder(Integer orderId) {
+    public void deleteOrder(Integer orderId) {
         Order existingOrder = getOrderById(orderId);
         orderRepo.delete(existingOrder);
-        return "Order with orderId: " + orderId + " deleted successfully !!!";
+    }
 
+    @Override
+    public void updatePaymentStatus(Integer orderId, EPaymentStatus paymentStatus) {
+        Order order = orderRepo.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        order.setPaymentStatus(paymentStatus);
+        orderRepo.save(order);
     }
 
     @Override
@@ -244,13 +168,5 @@ public class OrderServiceImpl implements OrderService {
         shipmentService.createTracker(trackingNumber);
         return "update tracking-number success";
     }
-
-    @Override
-    public void updatePaymentStatus(Integer orderId, String paymentStatus) {
-        Order order = orderRepo.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-        order.setPaymentStatus(paymentStatus);
-        orderRepo.save(order);
-    }
-
 
 }

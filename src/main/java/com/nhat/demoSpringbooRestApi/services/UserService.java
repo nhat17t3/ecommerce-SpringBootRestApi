@@ -1,17 +1,20 @@
 package com.nhat.demoSpringbooRestApi.services;
 
-import com.nhat.demoSpringbooRestApi.dtos.UserListResponseDTO;
+import com.nhat.demoSpringbooRestApi.dtos.DataTableResponseDTO;
+import com.nhat.demoSpringbooRestApi.dtos.UserFilterRequestDTO;
 import com.nhat.demoSpringbooRestApi.dtos.UserRequestDTO;
 import com.nhat.demoSpringbooRestApi.models.User;
 
 public interface UserService {
-    User registerUser(UserRequestDTO userDTO);
+    User registerUser(UserRequestDTO userDTO) throws Exception;
 
-    UserListResponseDTO getAllUsers(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
+    DataTableResponseDTO<User> getAllUsers(UserFilterRequestDTO userFilterRequestDTO);
 
     User getUserById(Integer userId);
 
+    User getUserByEmail(String email);
+
     User updateUser(Integer userId, UserRequestDTO userDTO);
 
-    String deleteUser(Integer userId);
+    void deleteUser(Integer userId);
 }

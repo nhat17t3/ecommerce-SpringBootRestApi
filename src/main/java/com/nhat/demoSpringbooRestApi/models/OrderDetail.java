@@ -23,7 +23,7 @@ public class OrderDetail {
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("orderId")
-//    @JoinColumn(name = "user_id")
+//    @JoinColumn(name = "order_id")
     private Order order;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -31,10 +31,12 @@ public class OrderDetail {
 //    @JoinColumn(name = "product_id")
     private Product product;
 
-    @NotNull
+    @Column(name = "price")
+    @NotNull(message = "{error.order_detail.price.null}")
     private Float price;
 
-    @NotNull
+    @Column(name = "quantity")
+    @NotNull(message = "{error.order_detail.quantity.null}")
     private Integer quantity;
 
 

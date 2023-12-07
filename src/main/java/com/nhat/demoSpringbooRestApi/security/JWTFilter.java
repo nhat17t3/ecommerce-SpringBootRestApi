@@ -1,7 +1,6 @@
 package com.nhat.demoSpringbooRestApi.security;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.nhat.demoSpringbooRestApi.services.impl.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,7 +42,6 @@ public class JWTFilter extends OncePerRequestFilter {
                     System.out.println(userDetails);
                     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                             new UsernamePasswordAuthenticationToken(email, userDetails.getPassword(), userDetails.getAuthorities());
-
                     if (SecurityContextHolder.getContext().getAuthentication() == null) {
                         SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
                     }

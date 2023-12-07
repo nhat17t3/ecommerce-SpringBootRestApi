@@ -16,6 +16,7 @@ public class AppConstants {
 
 //    public static final String[] PUBLIC_URLS = { "/v3/api-docs/**", "/swagger-ui/**",
 //            "/register/**", "/login","/roles/**","/products/**","/users/**","/comments/**" };
-    public static final String[] USER_URLS = { "/api/public/**","/categories/**", };
+//    public static final String[] USER_URLS = { "/api/public/**","/categories/**", };
+    public static final String[] USER_URLS = { };
     public static final String[] ADMIN_URLS = { "/api/admin/**"  };
 }

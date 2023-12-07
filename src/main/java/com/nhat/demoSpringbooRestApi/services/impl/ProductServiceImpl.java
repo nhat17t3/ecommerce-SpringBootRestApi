@@ -1,6 +1,7 @@
 package com.nhat.demoSpringbooRestApi.services.impl;
 
-import com.nhat.demoSpringbooRestApi.dtos.ProductListResponseDTO;
+import com.nhat.demoSpringbooRestApi.dtos.ProductFilterRequestDTO;
+import com.nhat.demoSpringbooRestApi.dtos.DataTableResponseDTO;
 import com.nhat.demoSpringbooRestApi.dtos.ProductRequestDTO;
 import com.nhat.demoSpringbooRestApi.exceptions.ResourceNotFoundException;
 import com.nhat.demoSpringbooRestApi.models.Category;
@@ -10,33 +11,28 @@ import com.nhat.demoSpringbooRestApi.repositories.ImageRepo;
 import com.nhat.demoSpringbooRestApi.repositories.ProductRepo;
 import com.nhat.demoSpringbooRestApi.services.CategoryService;
 import com.nhat.demoSpringbooRestApi.services.ProductService;
+import com.nhat.demoSpringbooRestApi.specifications.ProductSpecifications;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
-import net.sf.jasperreports.engine.export.JRXlsExporter;
-import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
-import net.sf.jasperreports.export.SimpleXlsReportConfiguration;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -57,80 +53,22 @@ public class ProductServiceImpl implements ProductService {
     MinIOService minIOService;
 
     @Override
-    public ProductListResponseDTO getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
+    public DataTableResponseDTO<Product> getAllProducts(ProductFilterRequestDTO productFilterRequestDTO) {
+        Sort sortByAndOrder = productFilterRequestDTO.getSortOrder().equalsIgnoreCase("asc")
+                ? Sort.by(productFilterRequestDTO.getSortBy()).ascending()
+                : Sort.by(productFilterRequestDTO.getSortBy()).descending();
+        Pageable pageDetails = PageRequest.of(productFilterRequestDTO.getPageNumber(), productFilterRequestDTO.getPageSize(), sortByAndOrder);
 
-        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+        Specification<Product> spec = ProductSpecifications.searchByCondition(productFilterRequestDTO);
 
-        Page<Product> pageProducts = productRepo.findAll(pageDetails);
+        Page<Product> pageProducts = productRepo.findAll(spec, pageDetails);
 
         List<Product> products = pageProducts.getContent();
 
 //        List<ProductRequestDTO> productRequestDTO = products.stream().map(product -> modelMapper.map(product, ProductRequestDTO.class))
 //                .collect(Collectors.toList());
 
-        ProductListResponseDTO productResponse = new ProductListResponseDTO();
-
-        productResponse.setContent(products);
-        productResponse.setPageNumber(pageProducts.getNumber());
-        productResponse.setPageSize(pageProducts.getSize());
-        productResponse.setTotalElements(pageProducts.getTotalElements());
-        productResponse.setTotalPages(pageProducts.getTotalPages());
-        productResponse.setLastPage(pageProducts.isLast());
-
-        return productResponse;
-    }
-
-    @Override
-    public ProductListResponseDTO searchProductByCategory(Integer categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-
-        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
-
-        Page<Product> pageProducts = productRepo.findByCategoryId(categoryId, pageDetails);
-
-        List<Product> products = pageProducts.getContent();
-
-//        if (products.size() == 0) {
-//            throw new CustomException("Products not found with category ID: " + categoryId);
-//        }
-
-        List<ProductRequestDTO> productRequestDTO = products.stream().map(product -> modelMapper.map(product, ProductRequestDTO.class))
-                .collect(Collectors.toList());
-
-        ProductListResponseDTO productResponse = new ProductListResponseDTO();
-
-        productResponse.setContent(products);
-        productResponse.setPageNumber(pageProducts.getNumber());
-        productResponse.setPageSize(pageProducts.getSize());
-        productResponse.setTotalElements(pageProducts.getTotalElements());
-        productResponse.setTotalPages(pageProducts.getTotalPages());
-        productResponse.setLastPage(pageProducts.isLast());
-
-        return productResponse;
-    }
-
-    @Override
-    public ProductListResponseDTO searchProductByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-
-        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
-
-        Page<Product> pageProducts = productRepo.findByNameLike(keyword, pageDetails);
-
-        List<Product> products = pageProducts.getContent();
-
-//        if (products.size() == 0) {
-//            throw new CustomException("Products not found with keyword: " + keyword);
-//        }
-
-        List<ProductRequestDTO> productRequestDTO = products.stream().map(product -> modelMapper.map(product, ProductRequestDTO.class))
-                .collect(Collectors.toList());
-
-        ProductListResponseDTO productResponse = new ProductListResponseDTO();
+        DataTableResponseDTO<Product> productResponse = new DataTableResponseDTO<>();
 
         productResponse.setContent(products);
         productResponse.setPageNumber(pageProducts.getNumber());
@@ -149,21 +87,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product createProduct(ProductRequestDTO productRequestDTO , MultipartFile imagePrimary, MultipartFile[] moreImages) {
+    public Product createProduct(ProductRequestDTO productRequestDTO) {
+        //save product
         Category category = categoryService.findCategoryById(productRequestDTO.getCategoryId());
-
         Product product;
         product = modelMapper.map(productRequestDTO, Product.class);
         product.setCategory(category);
         Product newProduct =  productRepo.save(product);
 
-        String imagePrimaryUrl = minIOService.uploadFile(imagePrimary);
+        //save Image
+        String imagePrimaryUrl = minIOService.uploadFile(productRequestDTO.getImagePrimary());
         Image image1 = new Image();
         image1.setImagePath(imagePrimaryUrl);
         image1.setIsPrimary(true);
         image1.setProduct(product);
         imageRepo.save(image1);
-        for (MultipartFile moreImage : moreImages) {
+        for (MultipartFile moreImage : productRequestDTO.getMoreImages()) {
             System.out.println("Uploading image: " + moreImage.getOriginalFilename());  // In ra tên ảnh
             String imageUrl = minIOService.uploadFile(moreImage);
             Image image = new Image();
@@ -172,13 +111,11 @@ public class ProductServiceImpl implements ProductService {
             imageRepo.save(image);
         }
 
-        Product existingProduct = getProductById(newProduct.getId());
-
         return getProductById(newProduct.getId());
     }
 
     @Override
-    public Product updateProduct(Integer productId, ProductRequestDTO productRequestDTO , MultipartFile imagePrimary, MultipartFile[] moreImages) {
+    public Product updateProduct(Integer productId, ProductRequestDTO productRequestDTO) {
         Product existingProduct = getProductById(productId);
         Category category = categoryService.findCategoryById(productRequestDTO.getCategoryId());
         existingProduct.setCategory(category);
@@ -188,9 +125,9 @@ public class ProductServiceImpl implements ProductService {
 
         List<Image> images = new ArrayList<>();
         // Nếu có ảnh chính mới, cập nhật
-        if (imagePrimary != null) {
+        if (productRequestDTO.getImagePrimary() != null) {
             imageRepo.delete(imageRepo.findByProductIdAndIsPrimary(productId,true));
-            String imagePrimaryUrl = minIOService.uploadFile(imagePrimary);
+            String imagePrimaryUrl = minIOService.uploadFile(productRequestDTO.getImagePrimary());
             Image image1 = new Image();
             image1.setImagePath(imagePrimaryUrl);
             image1.setIsPrimary(true);
@@ -198,9 +135,9 @@ public class ProductServiceImpl implements ProductService {
         }
 
         // Nếu có thêm ảnh mới, cập nhật
+        MultipartFile[] moreImages =  productRequestDTO.getMoreImages();
         if (moreImages != null && moreImages.length > 0) {
             imageRepo.deleteAll(imageRepo.findByProductId(productId));
-            List<String> moreImagesUrls = new ArrayList<>();
 
             for (MultipartFile moreImage : moreImages) {
                 System.out.println("Uploading image: " + moreImage.getOriginalFilename());
@@ -216,11 +153,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public String deleteProduct(Integer productId) {
+    public void deleteProduct(Integer productId) {
         Product existingProduct = getProductById(productId);
         imageRepo.deleteAll(imageRepo.findByProductId(productId));
         productRepo.delete(existingProduct);
-        return "Product with productId: " + productId + " deleted successfully !!!";
     }
 
     @Override

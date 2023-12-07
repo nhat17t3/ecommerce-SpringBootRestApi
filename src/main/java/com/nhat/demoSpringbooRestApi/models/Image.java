@@ -27,30 +27,19 @@ public class Image {
     private int id;
 
     @Column(name = "image_path",length = 65555)
-    @NotBlank
+//    @NotBlank(message = "{error.image.imagePath.blank")
     private String imagePath;
 
     @Column(name = "alt_text")
     private String altText;
 
+    @Column(name = "isPrimary")
     private Boolean isPrimary;
 
     @JsonIgnore
-    @NotNull
+    @NotNull(message = "{error.image.product.null")
     @ManyToOne
-    @JoinColumn(name = "product_id", referencedColumnName = "id")
+    @JoinColumn(name = "product_id", referencedColumnName = "id", nullable = false)
     private Product product;
 
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//        Image image = (Image) o;
-//        return id == image.id && Objects.equals(imagePath, image.imagePath) && Objects.equals(altText, image.altText) && Objects.equals(isPrimary, image.isPrimary) && Objects.equals(product, image.product);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(id, imagePath, altText, isPrimary, product);
-//    }
 }

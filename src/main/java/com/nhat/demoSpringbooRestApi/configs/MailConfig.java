@@ -13,8 +13,8 @@ import java.util.Properties;
 @Configuration
 public class MailConfig {
 
-    @Autowired
-    private MailProperties mailProperties;
+//    @Autowired
+//    private MailProperties mailProperties;
 
     @Value("spring.mail.username")
     private String username;
@@ -25,12 +25,15 @@ public class MailConfig {
     @Bean
     public JavaMailSender getJavaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-//        mailSender.setHost("smtp.gmail.com");
-//        mailSender.setPort(587);
-        mailSender.setHost(mailProperties.getHost());
-        mailSender.setPort(mailProperties.getPort());
-        mailSender.setUsername(mailProperties.getUsername());
-        mailSender.setPassword(mailProperties.getPassword());
+        mailSender.setHost("smtp.gmail.com");
+        mailSender.setPort(587);
+        mailSender.setUsername("hoanglongnhat0605@gmail.com");
+        mailSender.setPassword("zcak oxsm vrwd rpiv");
+
+//        mailSender.setHost(mailProperties.getHost());
+//        mailSender.setPort(mailProperties.getPort());
+//        mailSender.setUsername(mailProperties.getUsername());
+//        mailSender.setPassword(mailProperties.getPassword());
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");

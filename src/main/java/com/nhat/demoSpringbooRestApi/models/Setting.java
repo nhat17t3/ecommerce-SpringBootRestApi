@@ -19,11 +19,12 @@ public class Setting {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    @Column(unique = true)
+    @Column(unique = true, name = "key-setting")
     private String key;
 
+    @Column(name = "value-setting")
     private String value;
 
     @UpdateTimestamp

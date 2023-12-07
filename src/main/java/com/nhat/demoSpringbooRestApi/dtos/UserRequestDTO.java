@@ -20,7 +20,8 @@ public class UserRequestDTO {
     @NotBlank
     private String name;
 
-    private int age;
+    @NotBlank
+    private String phone;
 
     @Email
     private String email;
@@ -29,5 +30,5 @@ public class UserRequestDTO {
     private String password;
 
     @NotEmpty
-    private Set<Integer> roles = new HashSet<>();
+    private Set<String> roles = new HashSet<>();
 }

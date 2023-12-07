@@ -35,7 +35,7 @@ public class SettingController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Setting> updateSetting(@PathVariable Long id, @RequestBody Setting setting) {
+    public ResponseEntity<Setting> updateSetting(@PathVariable Integer id, @RequestBody Setting setting) {
         if (settingService.getSettingByKey(setting.getKey()).isPresent()) {
             setting.setId(id);
             return ResponseEntity.ok(settingService.saveSetting(setting));

@@ -48,9 +48,8 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     }
 
     @Override
-    public String deletePaymentMethod(int paymentMethodId) {
+    public void deletePaymentMethod(int paymentMethodId) {
         PaymentMethod existingPaymentMethod = findPaymentMethodById(paymentMethodId);
         paymentMethodRepo.delete(existingPaymentMethod);
-        return "PaymentMethod has id =" + paymentMethodId + ": is deleted";
     }
 }

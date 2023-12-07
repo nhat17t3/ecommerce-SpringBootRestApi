@@ -1,11 +1,11 @@
 package com.nhat.demoSpringbooRestApi.controllers;
 
 import com.nhat.demoSpringbooRestApi.configs.AppConstants;
-import com.nhat.demoSpringbooRestApi.dtos.OrderListResponseDTO;
-import com.nhat.demoSpringbooRestApi.dtos.OrderRequestDTO;
-import com.nhat.demoSpringbooRestApi.dtos.PaymentRequestDTO;
+import com.nhat.demoSpringbooRestApi.dtos.*;
 import com.nhat.demoSpringbooRestApi.models.Order;
 import com.nhat.demoSpringbooRestApi.services.OrderService;
+//import com.nhat.demoSpringbooRestApi.services.impl.PayPalService;
+import com.nhat.demoSpringbooRestApi.services.impl.EmailService;
 import com.nhat.demoSpringbooRestApi.services.impl.PayPalService;
 import com.paypal.api.payments.Links;
 import com.paypal.api.payments.Payment;
@@ -32,37 +32,38 @@ public class OrderController {
     private PayPalService payPalService;
 
     @GetMapping("")
-    public ResponseEntity<OrderListResponseDTO> getAllOrders(
-            @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
-            @RequestParam(name = "sortBy", defaultValue = AppConstants.SORT_PRODUCTS_BY, required = false) String sortBy,
-            @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR, required = false) String sortOrder) {
-        OrderListResponseDTO orderResponse = orderService.getAllOrders(pageNumber, pageSize, sortBy, sortOrder);
-        return new ResponseEntity<OrderListResponseDTO>(orderResponse, HttpStatus.OK);
+    public ResponseEntity<BaseResponse> getAllOrders(OrderFilterRequestDTO orderFilterRequestDTO) {
+        DataTableResponseDTO<Order> orders = orderService.getAllOrders(orderFilterRequestDTO);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("order.success.getAll",orders);
+        return ResponseEntity.status(200).body(baseResponse);
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<Order> getOrderById(@PathVariable Integer orderId) {
+    public ResponseEntity<BaseResponse> getOrderById(@PathVariable Integer orderId) {
         Order order = orderService.getOrderById(orderId);
-        return new ResponseEntity<Order>(order, HttpStatus.OK);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("order.success.getById",order);
+        return ResponseEntity.status(200).body(baseResponse);
     }
 
     @PostMapping("")
-    public ResponseEntity<Order> addOrder(@Valid @RequestBody OrderRequestDTO order) {
+    public ResponseEntity<BaseResponse> addOrder(@Valid @RequestBody OrderRequestDTO order) throws Exception {
         Order savedOrder = orderService.createOrder(order);
-        return new ResponseEntity<Order>(savedOrder, HttpStatus.CREATED);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("order.success.create",savedOrder);
+        return ResponseEntity.status(201).body(baseResponse);
     }
 
     @PutMapping("/{orderId}")
-    public ResponseEntity<Order> updateOrder(@PathVariable Integer orderId, @Valid @RequestBody OrderRequestDTO order) {
+    public ResponseEntity<BaseResponse> updateOrder(@PathVariable Integer orderId, @Valid @RequestBody OrderRequestDTO order) {
         Order savedOrder = orderService.updateOrder(orderId, order);
-        return new ResponseEntity<Order>(savedOrder, HttpStatus.OK);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("order.success.update",savedOrder);
+        return ResponseEntity.status(200).body(baseResponse);
     }
 
     @DeleteMapping("/{orderId}")
-    public ResponseEntity<String> deleteOrder(@PathVariable Integer orderId) {
-        String message = orderService.deleteOrder(orderId);
-        return new ResponseEntity<String>(message, HttpStatus.OK);
+    public ResponseEntity<BaseResponse> deleteOrder(@PathVariable Integer orderId) {
+        orderService.deleteOrder(orderId);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("order.success.delete");
+        return ResponseEntity.status(200).body(baseResponse);
     }
 
 
@@ -100,26 +101,30 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/status")
-    public ResponseEntity<String> updateOrderStatus(@PathVariable Integer orderId, @RequestParam String status) {
+    public ResponseEntity<BaseResponse> updateOrderStatus(@PathVariable Integer orderId, @RequestParam String status) {
         String message = orderService.updateOrderStatus(orderId, status);
-        return ResponseEntity.ok(message);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse(message);
+        return ResponseEntity.status(200).body(baseResponse);
 
     }
 
     @PostMapping("/update-all-status-from-ship24")
-    public ResponseEntity<String> updateAllOrderStatusFromShip24() {
+    public ResponseEntity<BaseResponse> updateAllOrderStatusFromShip24() {
         try {
             orderService.updateAllOrderStatusFromShip24();
-            return ResponseEntity.ok("All orders updated successfully");
+            BaseResponse baseResponse = BaseResponse.createSuccessResponse("All orders updated successfully from tracking");
+            return ResponseEntity.status(200).body(baseResponse);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating orders");
+            BaseResponse baseResponse = BaseResponse.createErrorResponse("Error updating orders from tracking");
+            return ResponseEntity.status(500).body(baseResponse);
         }
     }
 
     @PutMapping("/{orderId}/tracking-number")
-    public ResponseEntity<String> updateTrackingNumberForOrder(@PathVariable int orderId, @RequestParam String trackingNumber) {
+    public ResponseEntity<BaseResponse> updateTrackingNumberForOrder(@PathVariable int orderId, @RequestParam String trackingNumber) {
         String message = orderService.updateTrackingNumberForOrder(orderId, trackingNumber);
-        return ResponseEntity.ok(message);
+        BaseResponse baseResponse = BaseResponse.createErrorResponse(message);
+        return ResponseEntity.status(200).body(baseResponse);
 
     }
 

@@ -23,17 +23,16 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private  int id;
 
-    @NotBlank
+    @NotBlank(message = "{error.refresh_token.token.blank")
+    @Column(name = "token")
     private String token;
 
-
-    @NotNull
+    @NotNull(message = "{error.refresh_token.user.null")
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
     @Column(name = "expires_at")
     private Instant expiresAt;
-
 
 }

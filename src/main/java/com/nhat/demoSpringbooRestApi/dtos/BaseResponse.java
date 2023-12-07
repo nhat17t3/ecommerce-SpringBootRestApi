@@ -49,4 +49,20 @@ public class BaseResponse {
     public void setErrors(Object errors) {
         this.errors = errors;
     }
+
+    public static  BaseResponse createSuccessResponse(String successMessage, Object responseData) {
+        return new BaseResponse(true, successMessage, responseData,null);
+    }
+
+    public static BaseResponse createSuccessResponse(String successMessage) {
+        return new BaseResponse(true, successMessage, null,null);
+    }
+
+    public static  BaseResponse createErrorResponse(String errorMessage, Object responseData) {
+        return new BaseResponse(false, errorMessage,null, responseData);
+    }
+
+    public static BaseResponse createErrorResponse(String errorMessage) {
+        return new BaseResponse(false, errorMessage, null , null);
+    }
 }

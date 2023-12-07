@@ -3,7 +3,6 @@ package com.nhat.demoSpringbooRestApi.services.impl;
 import com.nhat.demoSpringbooRestApi.dtos.TrackingOrderRequestDTO;
 import com.nhat.demoSpringbooRestApi.models.Order;
 import com.nhat.demoSpringbooRestApi.repositories.OrderRepository;
-import com.nhat.demoSpringbooRestApi.services.OrderService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,13 +11,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Service
-public class ShipmentService {
+public class TrackingShipmentService {
 
     @Value("${ship24.apiKey}")
     private String apiKey;
-
-    @Autowired
-    private OrderService orderService;
 
     @Autowired
     private WebClient ship24WebClient;
@@ -66,10 +62,6 @@ public class ShipmentService {
             e.printStackTrace();
             // Xử lý các ngoại lệ phát sinh ở đây
         }
-
-
     }
-
-
 
 }

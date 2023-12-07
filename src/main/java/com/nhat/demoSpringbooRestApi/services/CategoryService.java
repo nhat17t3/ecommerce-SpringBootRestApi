@@ -20,5 +20,8 @@ public interface CategoryService{
 
     Category updateCategory (int categoryId, CategoryRequestDTO category);
 
-    String deleteCategory (int categoryId);
+    boolean checkBeforeDeleteCategory(int categoryId);
+
+    void deleteCategory (int categoryId);
+
 }

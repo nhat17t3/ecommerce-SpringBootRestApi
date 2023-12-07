@@ -1,4 +1,4 @@
-package com.nhat.demoSpringbooRestApi.configs;
+package com.nhat.demoSpringbooRestApi.security;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,7 +27,7 @@ public class UserInfoConfig implements UserDetails {
 
     public UserInfoConfig(User user) {
         this.email = user.getEmail();
-        this.password = user.getPassword();
+        this.password = user.getPassword() !=null ? user.getPassword() :"";
         this.authorities = user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
     }
 

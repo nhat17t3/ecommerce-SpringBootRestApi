@@ -1,36 +1,20 @@
 package com.nhat.demoSpringbooRestApi.dtos;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CategoryRequestDTO {
 
-    @NotBlank(message = "Tên không được để trống")
+    @NotBlank(message = "{error.CategoryRequestDTO.name.blank}")
+    @Size(max = 100, message = "{error.CategoryRequestDTO.name.size}")
     private String name;
 
-//    @NotBlank(message = "code không được để trống")
-    private String code;
+//    private Integer parentId;
 
-    public CategoryRequestDTO() {
-    }
-
-    public CategoryRequestDTO(String name, String code) {
-        this.name = name;
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
 }

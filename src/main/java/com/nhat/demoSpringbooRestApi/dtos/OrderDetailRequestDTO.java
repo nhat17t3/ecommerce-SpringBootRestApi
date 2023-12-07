@@ -15,11 +15,11 @@ public class OrderDetailRequestDTO {
     private int orderId;
 
     @NotNull
-    private int productId;
+    private Integer productId;
 
     @NotNull
     private Float price;
 
     @NotNull
-    private int quantity;
+    private Integer quantity;
 }
