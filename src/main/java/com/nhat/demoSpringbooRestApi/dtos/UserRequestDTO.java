@@ -23,11 +23,14 @@ public class UserRequestDTO {
     @NotBlank
     private String phone;
 
+    @NotBlank
     @Email
     private String email;
 
     @NotBlank
     private String password;
+
+    private String address;
 
     @NotEmpty
     private Set<String> roles = new HashSet<>();

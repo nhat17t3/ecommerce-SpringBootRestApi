@@ -17,9 +17,7 @@ public interface ProductRepo extends JpaRepository<Product,Integer>, JpaSpecific
 //    List<Product> findByName (String name);
 //    Page<Product> findByNameLike(String name, Pageable pageDetails);
 //    Page<Product> findByCategoryId(int categoryId, Pageable pageDetails);
-
     Page<Product> findAll(Specification<Product> spec, Pageable pageable);
-
     @Query("SELECT product FROM Product product "
             + "JOIN FETCH product.category category "
             + "WHERE category.id = ?1")

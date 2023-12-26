@@ -14,7 +14,7 @@ public class PageableAndSortParam {
 
     public Integer pageSize = Integer.valueOf(AppConstants.PAGE_SIZE);
 
-    public String sortBy = AppConstants.SORT_PRODUCTS_BY;
+    public String sortBy = AppConstants.SORT_BY;
 
     public String sortOrder = AppConstants.SORT_DIR;
 

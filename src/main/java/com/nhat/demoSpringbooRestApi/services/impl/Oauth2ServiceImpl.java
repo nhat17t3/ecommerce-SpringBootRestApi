@@ -7,7 +7,6 @@ import com.nhat.demoSpringbooRestApi.models.Role;
 import com.nhat.demoSpringbooRestApi.models.User;
 import com.nhat.demoSpringbooRestApi.repositories.OauthProviderRepository;
 import com.nhat.demoSpringbooRestApi.repositories.RefreshTokenRepository;
-import com.nhat.demoSpringbooRestApi.repositories.RoleRepo;
 import com.nhat.demoSpringbooRestApi.repositories.UserRepo;
 import com.nhat.demoSpringbooRestApi.services.Oauth2Service;
 import com.nhat.demoSpringbooRestApi.services.RoleService;
@@ -58,14 +57,16 @@ public class Oauth2ServiceImpl implements Oauth2Service {
             }
             if (needUpdate) {
                 newUser = userRepository.save(user);
-            } else {newUser = user;}
+            } else {
+                newUser = user;
+            }
         } else {
             // User doesn't exist, create new user
             User user = new User();
             user.setName(name);
             user.setEmail(email);
             Set<Role> roles = new HashSet<>();
-            for (String roleName: o2authRequestDTO.getRoles()) {
+            for (String roleName : o2authRequestDTO.getRoles()) {
                 Role role = roleService.findRoleByName(roleName);
                 roles.add(role);
             }
@@ -90,10 +91,10 @@ public class Oauth2ServiceImpl implements Oauth2Service {
         // Save refresh token in database
         RefreshToken newRefreshToken = new RefreshToken();
         newRefreshToken.setUser(user);
-//        newRefreshToken.setToken(refreshToken);
+        //newRefreshToken.setToken(refreshToken);
         newRefreshToken.setToken(UUID.randomUUID().toString());
         newRefreshToken.setExpiresAt(Instant.now().plus(Duration.ofDays(7)));  // assuming the refresh token is valid for 7 days
-        return  refreshTokenRepository.save(newRefreshToken);
+        return refreshTokenRepository.save(newRefreshToken);
 
         // For this example, we will not store the access token in the database, as it's typically short-lived and used directly by the client.
         // However, you should send the access token back to the client application in your API response.

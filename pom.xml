@@ -145,6 +145,18 @@
 			<version>6.0.0.Alpha7</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+			<version>4.3.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.github.trackingmores</groupId>
+			<artifactId>trackingmore-sdk-java</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+
 
 		<!--		<dependency>-->
 <!--			<groupId>io.springfox</groupId>-->

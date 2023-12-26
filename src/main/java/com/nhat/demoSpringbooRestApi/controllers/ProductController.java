@@ -1,8 +1,8 @@
 package com.nhat.demoSpringbooRestApi.controllers;
 
 import com.nhat.demoSpringbooRestApi.dtos.BaseResponse;
-import com.nhat.demoSpringbooRestApi.dtos.ProductFilterRequestDTO;
 import com.nhat.demoSpringbooRestApi.dtos.DataTableResponseDTO;
+import com.nhat.demoSpringbooRestApi.dtos.ProductFilterRequestDTO;
 import com.nhat.demoSpringbooRestApi.dtos.ProductRequestDTO;
 import com.nhat.demoSpringbooRestApi.models.Product;
 import com.nhat.demoSpringbooRestApi.services.ProductService;
@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
 
@@ -24,11 +23,10 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @GetMapping("")
+    @PostMapping("/list")
     public ResponseEntity<BaseResponse> getAllProducts(ProductFilterRequestDTO productFilterRequestDTO) {
-//        System.out.println(productFilterRequestDTO);
         DataTableResponseDTO<Product> products = productService.getAllProducts(productFilterRequestDTO);
-        BaseResponse baseResponse = BaseResponse.createSuccessResponse("product.success.getAll",products);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("product.success.getAll", products);
         return ResponseEntity.status(200).body(baseResponse);
     }
 
@@ -36,7 +34,7 @@ public class ProductController {
 //    public ResponseEntity<ProductListResponseDTO> getAllProducts(
 //            @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
 //            @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
-//            @RequestParam(name = "sortBy", defaultValue = AppConstants.SORT_PRODUCTS_BY, required = false) String sortBy,
+//            @RequestParam(name = "sortBy", defaultValue = AppConstants.SORT_BY, required = false) String sortBy,
 //            @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR, required = false) String sortOrder) {
 //        ProductListResponseDTO productResponse = productService.getAllProducts(pageNumber, pageSize, sortBy, sortOrder);
 //        return new ResponseEntity<ProductListResponseDTO>(productResponse, HttpStatus.OK);
@@ -52,7 +50,7 @@ public class ProductController {
     @PostMapping()
     public ResponseEntity<BaseResponse> addProduct(ProductRequestDTO productRequestDTO) {
         Product savedProduct = productService.createProduct(productRequestDTO);
-        BaseResponse baseResponse = BaseResponse.createSuccessResponse("product.success.create-product",savedProduct );
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("product.success.create-product", savedProduct);
         return new ResponseEntity<>(baseResponse, HttpStatus.CREATED);
     }
 //    @PostMapping()
@@ -74,7 +72,7 @@ public class ProductController {
 
     @PutMapping("/{productId}")
     public ResponseEntity<BaseResponse> updateProduct(@PathVariable Integer productId,
-                                                 @ModelAttribute ProductRequestDTO productRequestDTO) {
+                                                      @ModelAttribute ProductRequestDTO productRequestDTO) {
         Product savedProduct = productService.updateProduct(productId, productRequestDTO);
         BaseResponse baseResponse = BaseResponse.createSuccessResponse("product.success.update-product", savedProduct);
         return new ResponseEntity<>(baseResponse, HttpStatus.OK);
@@ -93,7 +91,7 @@ public class ProductController {
         httpHeaders.setContentType(MediaType.APPLICATION_PDF);
 //        MediaType media = new MediaType("application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 //        httpHeaders.setContentType(media);
-        byte[] reportStream =  productService.exportReportPDF(format);
+        byte[] reportStream = productService.exportReportPDF(format);
         return new ResponseEntity<>(reportStream, httpHeaders, HttpStatus.OK);
     }
 

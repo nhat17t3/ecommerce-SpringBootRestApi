@@ -10,12 +10,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DataTableResponseDTO<T> {
-
     private List<T> content;
     private Integer pageNumber;
     private Integer pageSize;
     private Long totalElements;
     private Integer totalPages;
     private boolean lastPage;
-
 }

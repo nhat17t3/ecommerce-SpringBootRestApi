@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +40,8 @@ public class User {
 
     private Boolean isEnable;
 
+    private String address;
+
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_role",
@@ -47,10 +50,9 @@ public class User {
     private Set<Role> roles = new HashSet<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Comment> comments = new HashSet<>();
-
-    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade =  CascadeType.ALL )
     private Set<RefreshToken> refreshTokens = new HashSet();
+
+    @OneToMany(mappedBy = "user", cascade =  CascadeType.ALL , fetch = FetchType.LAZY)
+    private List<Order> orders = new ArrayList<>();
 }

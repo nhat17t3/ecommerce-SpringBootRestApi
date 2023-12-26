@@ -5,10 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.LastModifiedDate;
-
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name = "setting")
@@ -26,6 +23,12 @@ public class Setting {
 
     @Column(name = "value-setting")
     private String value;
+
+    @Column(name = "group-setting")
+    private String groupSetting;
+
+    @Column(name = "default-value")
+    private String defaultValue;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;

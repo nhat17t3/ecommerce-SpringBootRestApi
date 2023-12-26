@@ -14,16 +14,14 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class CategoryServiceServiceImpl implements CategoryService {
-
-    @Autowired
-    private CategoryRepo categoryRepo;
-
-    @Autowired
-    private ProductRepo productRepo;
+public class CategoryServiceImpl implements CategoryService {
 
     @Autowired
     ModelMapper modelMapper;
+    @Autowired
+    private CategoryRepo categoryRepo;
+    @Autowired
+    private ProductRepo productRepo;
 
     @Override
     public List<Category> getAllCategories() {
@@ -32,7 +30,7 @@ public class CategoryServiceServiceImpl implements CategoryService {
 
     @Override
     public Category findCategoryById(int categoryId) {
-        return  categoryRepo.findById(categoryId)
+        return categoryRepo.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + categoryId));
     }
 

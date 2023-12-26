@@ -45,11 +45,6 @@ public class Category {
     public Category() {
     }
 
-//    public Category(@NotNull(message = "{error.category.name.null}") String name, Category parent) {
-//        this.name = name;
-//        this.parent = parent;
-//    }
-
     public Category(@NotNull(message = "{error.category.name.null}") String name) {
         this.name = name;
     }
@@ -70,21 +65,6 @@ public class Category {
         this.name = name;
     }
 
-//    public Category getParent() {
-//        return parent;
-//    }
-//
-//    public void setParent(Category parent) {
-//        this.parent = parent;
-//    }
-//
-//    public List<Category> getChildren() {
-//        return children;
-//    }
-//
-//    public void setChildren(List<Category> children) {
-//        this.children = children;
-//    }
 
     public List<Product> getProducts() {
         return products;

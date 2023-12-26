@@ -12,17 +12,13 @@ import java.util.Set;
 
 @Repository
 public interface SettingRepository extends JpaRepository<Setting, Integer> {
-
 	@Query("select st.value from Setting st where st.key = :name")
 	Optional<String> getSettingProperty(@Param("name") String propertyName);
-	
 	@Modifying
 	@Query("update Setting st set st.value = :value where st.key = :name")
 	void updateSettingProperty(@Param("name") String propertyName, @Param("value") String value);
-
 //    @Query("select st from Setting st where st.group = :group")
 //    Set<Setting> getSettingGroup(@Param("group") String settingGroup);
-
 	Optional<Setting> findByKey(String key);
 
 }

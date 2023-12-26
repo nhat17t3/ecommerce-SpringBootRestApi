@@ -1,6 +1,7 @@
 package com.nhat.demoSpringbooRestApi.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.trackingmore.model.tracking.TrackInfo;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -65,6 +66,7 @@ public class Order {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
@@ -76,5 +78,8 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade =  CascadeType.ALL , fetch = FetchType.EAGER)
     private List<OrderDetail> orderDetails;
+
+//    @OneToMany
+//    private List<TrackInfo> trackInfo;
 
 }

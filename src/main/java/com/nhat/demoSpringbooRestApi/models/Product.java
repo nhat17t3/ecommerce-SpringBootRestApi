@@ -40,7 +40,7 @@ public class Product {
     @Column(name = "short_description")
     private String shortDescription;
 
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "LONGBLOB")
     private String description;
 
     @Column(name = "inStock")
@@ -49,7 +49,7 @@ public class Product {
     @Column(name = "isActive")
     private Boolean isActive = true;
 
-    @OneToMany(mappedBy = "product", cascade =  CascadeType.ALL,fetch = FetchType.EAGER )
+    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true )
     private List<Image> images ;
 
     @NotNull(message = "{error.product.category_id.null}")

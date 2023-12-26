@@ -6,10 +6,10 @@ import com.nhat.demoSpringbooRestApi.models.RefreshToken;
 import com.nhat.demoSpringbooRestApi.models.User;
 import com.nhat.demoSpringbooRestApi.repositories.UserRepo;
 import com.nhat.demoSpringbooRestApi.security.JWTUtil;
+import com.nhat.demoSpringbooRestApi.security.UserDetailsServiceImpl;
 import com.nhat.demoSpringbooRestApi.services.Oauth2Service;
 import com.nhat.demoSpringbooRestApi.services.UserService;
 import com.nhat.demoSpringbooRestApi.services.impl.RefreshTokenService;
-import com.nhat.demoSpringbooRestApi.security.UserDetailsServiceImpl;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Collections;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,27 +27,19 @@ import java.util.Map;
 public class AuthController {
 
     @Autowired
+    RefreshTokenService refreshTokenService;
+    @Autowired
     private UserService userService;
-
     @Autowired
     private JWTUtil jwtUtil;
-
     @Autowired
     private AuthenticationManager authenticationManager;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-
     @Autowired
     private Oauth2Service oauth2Service;
-
     @Autowired
     private UserDetailsServiceImpl userDetailsServiceImpl;
-
-    @Autowired
-    RefreshTokenService refreshTokenService;
-
     @Autowired
     private UserRepo userRepo;
 
@@ -86,7 +76,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<BaseResponse> refreshAndGetAuthenticationToken( @RequestBody LoginRequestDTO loginRequestDTO) {
+    public ResponseEntity<BaseResponse> refreshAndGetAuthenticationToken(@RequestBody LoginRequestDTO loginRequestDTO) {
 //        String accessToken = authService.refreshToken(request);
         return refreshTokenService.findByToken(loginRequestDTO.getRefreshToken())
                 .map(refreshToken -> {
@@ -117,17 +107,17 @@ public class AuthController {
 
     @PostMapping("/oauth2/login-success")
     public ResponseEntity<BaseResponse> handleOAuth2LoginSuccess(@RequestBody O2authRequestDTO o2authRequestDTO) {
-            // Process user info from OAuth2 provider
-            User user = oauth2Service.processOAuth2User(o2authRequestDTO);
-            // Process access and refresh tokens
-            RefreshToken refreshToken = oauth2Service.processOAuth2Tokens(o2authRequestDTO , user);
-            // Generate JWT token for user
-            UsernamePasswordAuthenticationToken userAuthentication =
-                    new UsernamePasswordAuthenticationToken(user, null);
-            String accessToken = jwtUtil.generateToken(user.getEmail());
-            LoginResponseDTO loginResponseDTO = new LoginResponseDTO(user.getId(), accessToken, refreshToken.getToken());
-            BaseResponse baseResponse = BaseResponse.createSuccessResponse("login o2auth successful", loginResponseDTO);
-            return ResponseEntity.ok(baseResponse);
+        // Process user info from OAuth2 provider
+        User user = oauth2Service.processOAuth2User(o2authRequestDTO);
+        // Process access and refresh tokens
+        RefreshToken refreshToken = oauth2Service.processOAuth2Tokens(o2authRequestDTO, user);
+        // Generate JWT token for user
+        UsernamePasswordAuthenticationToken userAuthentication =
+                new UsernamePasswordAuthenticationToken(user, null);
+        String accessToken = jwtUtil.generateToken(user.getEmail());
+        LoginResponseDTO loginResponseDTO = new LoginResponseDTO(user.getId(), accessToken, refreshToken.getToken());
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("login o2auth successful", loginResponseDTO);
+        return ResponseEntity.ok(baseResponse);
     }
 
 //    @GetMapping("/oauth2/login-success")
@@ -158,4 +148,18 @@ public class AuthController {
 //            throw new IllegalArgumentException("Expected OAuth2AuthenticationToken, but got " + authentication);
 //        }
 //    }
+
+    @PostMapping("/updatePassword")
+    public ResponseEntity<BaseResponse> changeUserPassword(@RequestParam String newPassword, @RequestParam String oldPassword) {
+        User user = userService.getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+        if (passwordEncoder.matches(oldPassword, user.getPassword())) {
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepo.save(user);
+            BaseResponse baseResponse = BaseResponse.createSuccessResponse("update password successful");
+            return ResponseEntity.ok(baseResponse);
+        } else {
+            BaseResponse baseResponse = BaseResponse.createErrorResponse("update password");
+            return ResponseEntity.status(400).body(baseResponse);
+        }
+    }
 }

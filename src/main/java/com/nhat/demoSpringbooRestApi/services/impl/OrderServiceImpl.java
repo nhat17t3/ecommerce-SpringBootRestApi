@@ -1,6 +1,9 @@
 package com.nhat.demoSpringbooRestApi.services.impl;
 
-import com.nhat.demoSpringbooRestApi.dtos.*;
+import com.nhat.demoSpringbooRestApi.dtos.DataTableResponseDTO;
+import com.nhat.demoSpringbooRestApi.dtos.OrderDetailRequestDTO;
+import com.nhat.demoSpringbooRestApi.dtos.OrderFilterRequestDTO;
+import com.nhat.demoSpringbooRestApi.dtos.OrderRequestDTO;
 import com.nhat.demoSpringbooRestApi.exceptions.ResourceNotFoundException;
 import com.nhat.demoSpringbooRestApi.models.*;
 import com.nhat.demoSpringbooRestApi.repositories.OrderDetailRepository;
@@ -9,6 +12,7 @@ import com.nhat.demoSpringbooRestApi.services.OrderService;
 import com.nhat.demoSpringbooRestApi.services.PaymentMethodService;
 import com.nhat.demoSpringbooRestApi.services.ProductService;
 import com.nhat.demoSpringbooRestApi.services.UserService;
+import com.trackingmore.model.tracking.Tracking;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +21,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,10 +39,9 @@ public class OrderServiceImpl implements OrderService {
     private ProductService productService;
     @Autowired
     private ModelMapper modelMapper;
-    @Value("${ship24.apiKey}")
+    @Value("${trackingMore.apiKey}")
     private String apiKey;
-    @Autowired
-    private WebClient ship24WebClient;
+
 
     @Autowired
     private TrackingShipmentService shipmentService;
@@ -54,8 +56,6 @@ public class OrderServiceImpl implements OrderService {
         Pageable pageDetails = PageRequest.of(orderFilterRequestDTO.getPageNumber(), orderFilterRequestDTO.getPageSize(), sortByAndOrder);
         Page<Order> pageOrders = orderRepo.findAll(pageDetails);
         List<Order> orders = pageOrders.getContent();
-//        List<OrderRequestDTO> orderRequestDTO = orders.stream().map(order -> modelMapper.map(order, OrderRequestDTO.class))
-//                .collect(Collectors.toList());
         DataTableResponseDTO<Order> orderResponse = new DataTableResponseDTO<Order>();
         orderResponse.setContent(orders);
         orderResponse.setPageNumber(pageOrders.getNumber());
@@ -70,9 +70,11 @@ public class OrderServiceImpl implements OrderService {
     public Order getOrderById(Integer orderId) {
         Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-
-        if(order.getTrackingNumber() != null){
-            shipmentService.updateOrderStatusFromShip24(order.getTrackingNumber());
+        if (order.getTrackingNumber() != null) {
+            Tracking tracking = shipmentService.getTrackingByTrackingNumber(order.getTrackingNumber());
+            order.setOrderStatus(tracking.getDeliveryStatus());
+//            order.setTrackInfo(tracking.getOriginInfo().getTrackinfo());
+            orderRepo.save(order);
         }
         return orderRepo.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
@@ -88,7 +90,7 @@ public class OrderServiceImpl implements OrderService {
         order.setCreatedAt(LocalDateTime.now());
         Order newOrder = orderRepo.save(order);
 
-        for (OrderDetailRequestDTO orderDetailRequestDTO: orderRequestDTO.getOrderDetailRequestDTO()) {
+        for (OrderDetailRequestDTO orderDetailRequestDTO : orderRequestDTO.getOrderDetailRequestDTO()) {
             Product product = productService.getProductById(orderDetailRequestDTO.getProductId());
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setProduct(product);
@@ -98,7 +100,7 @@ public class OrderServiceImpl implements OrderService {
             orderDetailRepository.save(orderDetail);
         }
 
-        emailService.sendEmailFromTemplate(newOrder.getUser().getEmail(),"mail-order","demoSpringboot order success",newOrder);
+        emailService.sendEmailFromTemplate(newOrder.getUser().getEmail(), "mail-order", "Bạn đã đặt hàng thành công từ shop HLN", newOrder);
         return newOrder;
     }
 
@@ -119,7 +121,7 @@ public class OrderServiceImpl implements OrderService {
         order.setUpdatedAt(LocalDateTime.now());
 
         orderDetailRepository.deleteOrderDetailByOrderId(order.getId());
-        for (OrderDetailRequestDTO orderDetailRequestDTO: orderRequestDTO.getOrderDetailRequestDTO()) {
+        for (OrderDetailRequestDTO orderDetailRequestDTO : orderRequestDTO.getOrderDetailRequestDTO()) {
             Product product = productService.getProductById(orderDetailRequestDTO.getProductId());
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setProduct(product);
@@ -152,20 +154,23 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void updateAllOrderStatusFromShip24() {
-        List<Order> orders = orderRepo.findAllByOrderStatus("pending");
-        for (Order order: orders) {
-            if(order.getTrackingNumber() != null){
-                shipmentService.updateOrderStatusFromShip24(order.getTrackingNumber());
+    public void updateAllOrderStatusFromTracking() {
+        List<Order> orders = orderRepo.findAllByOrderNotInStatus(new String[]{"delivered", "canceled"});
+        for (Order order : orders) {
+            if (order.getTrackingNumber() != null) {
+                Tracking tracking = shipmentService.getTrackingByTrackingNumber(order.getTrackingNumber());
+                order.setOrderStatus(tracking.getDeliveryStatus());
+                orderRepo.save(order);
             }
         }
     }
 
     @Override
-    public String updateTrackingNumberForOrder(int orderId, String trackingNumber) {
+    public String updateTrackingNumberForOrder(int orderId, String trackingNumber, String courierCode) {
         Order order = orderRepo.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
         order.setTrackingNumber(trackingNumber);
-        shipmentService.createTracker(trackingNumber);
+        orderRepo.save(order);
+        shipmentService.createTracking(trackingNumber, courierCode);
         return "update tracking-number success";
     }
 

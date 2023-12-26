@@ -16,19 +16,15 @@ import java.util.List;
 @Service
 public class PayPalService {
 
-    private APIContext apiContext;
-
-    @Value("${paypal.client.id}")
-    private String clientId;
-
-    @Value("${paypal.client.secret}")
-    private String clientSecret;
-
-    @Value("${paypal.mode}")
-    private String mode;
-
     @Autowired
     OrderService orderService;
+    private APIContext apiContext;
+    @Value("${paypal.client.id}")
+    private String clientId;
+    @Value("${paypal.client.secret}")
+    private String clientSecret;
+    @Value("${paypal.mode}")
+    private String mode;
 
     @PostConstruct
     public void init() {
@@ -71,7 +67,7 @@ public class PayPalService {
     }
 
 
-    public void confirmPayment(String paymentId, String payerId , int orderId) throws PayPalRESTException {
+    public void confirmPayment(String paymentId, String payerId, int orderId) throws PayPalRESTException {
         Payment payment = new Payment();
         payment.setId(paymentId);
         PaymentExecution paymentExecute = new PaymentExecution();

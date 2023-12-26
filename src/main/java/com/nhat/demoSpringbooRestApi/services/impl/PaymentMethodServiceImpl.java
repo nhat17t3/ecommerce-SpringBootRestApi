@@ -27,7 +27,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
 
     @Override
     public PaymentMethod findPaymentMethodById(int paymentMethodId) {
-        return  paymentMethodRepo.findById(paymentMethodId)
+        return paymentMethodRepo.findById(paymentMethodId)
                 .orElseThrow(() -> new ResourceNotFoundException("PaymentMethod not found with id: " + paymentMethodId));
     }
 

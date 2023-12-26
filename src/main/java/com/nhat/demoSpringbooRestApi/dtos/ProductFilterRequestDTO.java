@@ -22,7 +22,7 @@ public class ProductFilterRequestDTO {
 
     private Integer pageSize = Integer.valueOf(AppConstants.PAGE_SIZE);
 
-    private String sortBy = AppConstants.SORT_PRODUCTS_BY ;
+    private String sortBy = AppConstants.SORT_BY;
 
     private String sortOrder = AppConstants.SORT_DIR;
 }

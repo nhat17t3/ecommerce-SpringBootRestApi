@@ -47,15 +47,9 @@ public class UserServiceImpl implements UserService {
                 : Sort.by(userFilterRequestDTO.getSortBy()).descending();
         Pageable pageDetails = PageRequest.of(userFilterRequestDTO.getPageNumber(), userFilterRequestDTO.getPageSize(), sortByAndOrder);
         Specification<User> userSpecification = UserSpecifications.searchByCondition(userFilterRequestDTO);
-        Page<User> pageUsers = userRepo.findAll(userSpecification , pageDetails);
-
+        Page<User> pageUsers = userRepo.findAll(userSpecification, pageDetails);
         List<User> users = pageUsers.getContent();
-
-//        List<UserRequestDTO> userRequestDTO = users.stream().map(user -> modelMapper.map(user, UserRequestDTO.class))
-//                .collect(Collectors.toList());
-
         DataTableResponseDTO<User> userResponse = new DataTableResponseDTO<>();
-
         userResponse.setContent(users);
         userResponse.setPageNumber(pageUsers.getNumber());
         userResponse.setPageSize(pageUsers.getSize());
@@ -80,7 +74,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User registerUser(UserRequestDTO userRequestDTO) throws Exception {
         Optional<User> existedUser = userRepo.findByEmail(userRequestDTO.getEmail());
-        if(existedUser.isEmpty()){
+        if (existedUser.isEmpty()) {
             User user = modelMapper.map(userRequestDTO, User.class);
             Set<Role> roles = new HashSet<>();
             for (String roleName : userRequestDTO.getRoles()) {
@@ -100,6 +94,7 @@ public class UserServiceImpl implements UserService {
 
         user.setName(userRequestDTO.getName());
         user.setPhone(userRequestDTO.getPhone());
+        user.setAddress(userRequestDTO.getAddress());
 //        user.setEmail(userRequestDTO.getEmail());
 //        user.setPassword(userRequestDTO.getPassword());
         Set<Role> roles = new HashSet<>();

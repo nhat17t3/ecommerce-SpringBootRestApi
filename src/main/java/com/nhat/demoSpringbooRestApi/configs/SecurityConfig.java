@@ -63,10 +63,8 @@ public class SecurityConfig {
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-
         provider.setUserDetailsService(userDetailsServiceImpl);
         provider.setPasswordEncoder(passwordEncoder());
-
         return provider;
     }
 
@@ -91,7 +89,7 @@ public class SecurityConfig {
 //        config.addAllowedOrigin("https://hoanglongnhat-totnghiep-reactjs-user.vercel.app");
 //        config.addAllowedOrigin("https://hoanglongnhat-totnghiep-reactjs-admin.vercel.app");
         config.addAllowedOrigin("http://localhost:3000");
-
+        config.addAllowedOrigin("http://localhost:3001");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

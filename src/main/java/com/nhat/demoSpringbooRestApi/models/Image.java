@@ -37,9 +37,10 @@ public class Image {
     private Boolean isPrimary;
 
     @JsonIgnore
-    @NotNull(message = "{error.image.product.null")
+    @NotNull(message = "{error.image.product.null}")
     @ManyToOne
     @JoinColumn(name = "product_id", referencedColumnName = "id", nullable = false)
     private Product product;
+
 
 }

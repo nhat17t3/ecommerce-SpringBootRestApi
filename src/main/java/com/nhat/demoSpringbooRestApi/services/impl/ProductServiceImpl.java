@@ -1,7 +1,7 @@
 package com.nhat.demoSpringbooRestApi.services.impl;
 
-import com.nhat.demoSpringbooRestApi.dtos.ProductFilterRequestDTO;
 import com.nhat.demoSpringbooRestApi.dtos.DataTableResponseDTO;
+import com.nhat.demoSpringbooRestApi.dtos.ProductFilterRequestDTO;
 import com.nhat.demoSpringbooRestApi.dtos.ProductRequestDTO;
 import com.nhat.demoSpringbooRestApi.exceptions.ResourceNotFoundException;
 import com.nhat.demoSpringbooRestApi.models.Category;
@@ -12,6 +12,7 @@ import com.nhat.demoSpringbooRestApi.repositories.ProductRepo;
 import com.nhat.demoSpringbooRestApi.services.CategoryService;
 import com.nhat.demoSpringbooRestApi.services.ProductService;
 import com.nhat.demoSpringbooRestApi.specifications.ProductSpecifications;
+import jakarta.transaction.Transactional;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
@@ -32,25 +33,25 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+@Transactional
 @Service
 public class ProductServiceImpl implements ProductService {
 
     @Autowired
-    private ProductRepo productRepo;
-
-    @Autowired
-    private CategoryService categoryService;
-
-    @Autowired
     protected ImageRepo imageRepo;
-
-    @Autowired
-    private ModelMapper modelMapper;
-
     @Autowired
     MinIOService minIOService;
+    @Autowired
+    private ProductRepo productRepo;
+    @Autowired
+    private CategoryService categoryService;
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Override
     public DataTableResponseDTO<Product> getAllProducts(ProductFilterRequestDTO productFilterRequestDTO) {
@@ -93,7 +94,7 @@ public class ProductServiceImpl implements ProductService {
         Product product;
         product = modelMapper.map(productRequestDTO, Product.class);
         product.setCategory(category);
-        Product newProduct =  productRepo.save(product);
+        Product newProduct = productRepo.save(product);
 
         //save Image
         String imagePrimaryUrl = minIOService.uploadFile(productRequestDTO.getImagePrimary());
@@ -126,28 +127,29 @@ public class ProductServiceImpl implements ProductService {
         List<Image> images = new ArrayList<>();
         // Nếu có ảnh chính mới, cập nhật
         if (productRequestDTO.getImagePrimary() != null) {
-            imageRepo.delete(imageRepo.findByProductIdAndIsPrimary(productId,true));
+//            imageRepo.deleteByProductIdAndIsPrimary(productId);
+            imageRepo.deleteAll(imageRepo.findByProductIdAndIsPrimary(productId, true));
             String imagePrimaryUrl = minIOService.uploadFile(productRequestDTO.getImagePrimary());
             Image image1 = new Image();
             image1.setImagePath(imagePrimaryUrl);
             image1.setIsPrimary(true);
+            image1.setProduct(existingProduct);
             imageRepo.save(image1);
         }
 
         // Nếu có thêm ảnh mới, cập nhật
-        MultipartFile[] moreImages =  productRequestDTO.getMoreImages();
+        MultipartFile[] moreImages = productRequestDTO.getMoreImages();
         if (moreImages != null && moreImages.length > 0) {
-            imageRepo.deleteAll(imageRepo.findByProductId(productId));
-
+//            imageRepo.deleteByProductIdAndIsNotPrimary(productId);
+            imageRepo.deleteAll(imageRepo.findByProductIdAndIsPrimary(productId, null));
             for (MultipartFile moreImage : moreImages) {
                 System.out.println("Uploading image: " + moreImage.getOriginalFilename());
                 String imageUrl = minIOService.uploadFile(moreImage);
                 Image image = new Image();
                 image.setImagePath(imageUrl);
+                image.setProduct(existingProduct);
                 imageRepo.save(image);
-                images.add(image);
             }
-            existingProduct.setImages(images);
         }
         return productRepo.save(existingProduct);
     }
@@ -177,13 +179,13 @@ public class ProductServiceImpl implements ProductService {
         //config FDF viewer
         if (reportFormat.equalsIgnoreCase("pdf")) {
 //            JasperExportManager.exportReportToPdfFile(jasperPrint, path + "\\product.pdf");
-        JRPdfExporter jrPdfExporter = new JRPdfExporter();
-        SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
-        configuration.setCompressed(true);
-        jrPdfExporter.setConfiguration(configuration);
-        jrPdfExporter.setExporterInput(new SimpleExporterInput(jasperPrint));
-        jrPdfExporter.setExporterOutput(new SimpleOutputStreamExporterOutput(byteArrayOutputStream));
-        jrPdfExporter.exportReport();
+            JRPdfExporter jrPdfExporter = new JRPdfExporter();
+            SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
+            configuration.setCompressed(true);
+            jrPdfExporter.setConfiguration(configuration);
+            jrPdfExporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+            jrPdfExporter.setExporterOutput(new SimpleOutputStreamExporterOutput(byteArrayOutputStream));
+            jrPdfExporter.exportReport();
         }
         //config FDF HTML
         if (reportFormat.equalsIgnoreCase("html")) {
