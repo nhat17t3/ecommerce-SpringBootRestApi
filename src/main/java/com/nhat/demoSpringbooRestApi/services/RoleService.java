@@ -1,5 +1,6 @@
 package com.nhat.demoSpringbooRestApi.services;
 
+import com.nhat.demoSpringbooRestApi.dtos.RoleRequestDTO;
 import com.nhat.demoSpringbooRestApi.models.Role;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +15,10 @@ public interface RoleService {
 
     Role findRoleByName (String name);
 
-    Role createRole (Role role);
+    Role createRole (RoleRequestDTO roleRequestDTO);
 
-    Role updateRole (int roleId, Role role);
+    Role updateRole (int roleId, RoleRequestDTO roleRequestDTO);
 
-    String deleteRole (int roleId);
+    void deleteRole (int roleId);
 
 }

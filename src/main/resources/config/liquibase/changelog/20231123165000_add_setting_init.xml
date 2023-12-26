@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <changeSet id="20231123165000-1" author="nhathl">
+        <insert tableName="setting">
+            <column name="key" value="email"/>
+            <column name="value" value="hoanglongnhat0605@gmail.com"/>
+        </insert>
+        <insert tableName="setting">
+            <column name="key" value="phone"/>
+            <column name="value" value="0369621657"/>
+        </insert> <insert tableName="setting">
+            <column name="key" value="Address"/>
+            <column name="value" value="Triệu Sơn - Triệu Phong - Quảng Trị"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

@@ -17,5 +17,5 @@ public interface PaymentMethodService {
 
     PaymentMethod updatePaymentMethod (int paymentMethodId, PaymentMethodRequestDTO paymentMethodRequestDTO);
 
-    String deletePaymentMethod (int paymentMethodId);
+    void deletePaymentMethod (int paymentMethodId);
 }

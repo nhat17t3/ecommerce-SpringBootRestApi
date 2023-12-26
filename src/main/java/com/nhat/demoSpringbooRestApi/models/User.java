@@ -3,11 +3,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,32 +24,35 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @NotBlank
-    @Size(min = 5, message = "Role name must contain atleast 5 characters")
+    @Column(name = "name", nullable = false)
+    @NotNull(message = "{error.user.name.null}")
+    @NotBlank(message = "{error.user.name.blank}")
+    @Size(max = 255, message = "{error.user.name.size}")
     private String name;
 
-    private int age;
+    @Column(name = "phone")
+    private String phone;
 
-    @Email
+    @Email(message = "{error.user.email.noValid")
     private String email;
 
-    @NotBlank
     private String password;
 
     private Boolean isEnable;
 
+    private String address;
 
-    @ManyToMany
+
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_role",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Set<Role> roles = new HashSet<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Comment> comments = new HashSet<>();
-
-    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade =  CascadeType.ALL )
     private Set<RefreshToken> refreshTokens = new HashSet();
+
+    @OneToMany(mappedBy = "user", cascade =  CascadeType.ALL , fetch = FetchType.LAZY)
+    private List<Order> orders = new ArrayList<>();
 }

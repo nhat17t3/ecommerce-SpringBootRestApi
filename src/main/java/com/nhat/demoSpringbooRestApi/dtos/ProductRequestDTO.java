@@ -21,21 +21,22 @@ public class ProductRequestDTO {
     private int id;
 
     @NotBlank
-    @Size(min = 5, message = "name product asleast 5 character")
+    @Size(min = 5)
     private String name;
 
-    @NotNull(message = "field not null")
-    private  float price;
+    @NotNull
+    private Float price;
+
+    private String shortDescription;
 
     private String description;
 
-//    private MultipartFile imagePrimary;
-//
-//    private MultipartFile[] moreImages;
-
     @NotNull
     @Min(value = 1)
-    private int categoryId;
+    private Integer categoryId;
 
+    private MultipartFile imagePrimary;
+
+    private MultipartFile[] moreImages;
 
 }

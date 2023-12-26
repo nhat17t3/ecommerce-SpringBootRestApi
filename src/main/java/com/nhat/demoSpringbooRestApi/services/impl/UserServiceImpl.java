@@ -1,6 +1,7 @@
 package com.nhat.demoSpringbooRestApi.services.impl;
 
-import com.nhat.demoSpringbooRestApi.dtos.UserListResponseDTO;
+import com.nhat.demoSpringbooRestApi.dtos.DataTableResponseDTO;
+import com.nhat.demoSpringbooRestApi.dtos.UserFilterRequestDTO;
 import com.nhat.demoSpringbooRestApi.dtos.UserRequestDTO;
 import com.nhat.demoSpringbooRestApi.exceptions.ResourceNotFoundException;
 import com.nhat.demoSpringbooRestApi.models.Role;
@@ -8,16 +9,19 @@ import com.nhat.demoSpringbooRestApi.models.User;
 import com.nhat.demoSpringbooRestApi.repositories.UserRepo;
 import com.nhat.demoSpringbooRestApi.services.RoleService;
 import com.nhat.demoSpringbooRestApi.services.UserService;
+import com.nhat.demoSpringbooRestApi.specifications.UserSpecifications;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -37,20 +41,15 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public UserListResponseDTO getAllUsers(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-
-        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
-
-        Page<User> pageUsers = userRepo.findAll(pageDetails);
-
+    public DataTableResponseDTO<User> getAllUsers(UserFilterRequestDTO userFilterRequestDTO) {
+        Sort sortByAndOrder = userFilterRequestDTO.getSortOrder().equalsIgnoreCase("asc")
+                ? Sort.by(userFilterRequestDTO.getSortBy()).ascending()
+                : Sort.by(userFilterRequestDTO.getSortBy()).descending();
+        Pageable pageDetails = PageRequest.of(userFilterRequestDTO.getPageNumber(), userFilterRequestDTO.getPageSize(), sortByAndOrder);
+        Specification<User> userSpecification = UserSpecifications.searchByCondition(userFilterRequestDTO);
+        Page<User> pageUsers = userRepo.findAll(userSpecification, pageDetails);
         List<User> users = pageUsers.getContent();
-
-//        List<UserRequestDTO> userRequestDTO = users.stream().map(user -> modelMapper.map(user, UserRequestDTO.class))
-//                .collect(Collectors.toList());
-
-        UserListResponseDTO userResponse = new UserListResponseDTO();
-
+        DataTableResponseDTO<User> userResponse = new DataTableResponseDTO<>();
         userResponse.setContent(users);
         userResponse.setPageNumber(pageUsers.getNumber());
         userResponse.setPageSize(pageUsers.getSize());
@@ -68,15 +67,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User registerUser(UserRequestDTO userRequestDTO) {
-        User user = modelMapper.map(userRequestDTO, User.class);
-        Set<Role> roles = new HashSet<>();
-        for (Integer roleId : userRequestDTO.getRoles()) {
-            Role role = roleService.findRoleById(roleId);
-            roles.add(role);
+    public User getUserByEmail(String email) {
+        return userRepo.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+    }
+
+    @Override
+    public User registerUser(UserRequestDTO userRequestDTO) throws Exception {
+        Optional<User> existedUser = userRepo.findByEmail(userRequestDTO.getEmail());
+        if (existedUser.isEmpty()) {
+            User user = modelMapper.map(userRequestDTO, User.class);
+            Set<Role> roles = new HashSet<>();
+            for (String roleName : userRequestDTO.getRoles()) {
+                Role role = roleService.findRoleByName(roleName);
+                roles.add(role);
+            }
+            user.setRoles(roles);
+            return userRepo.save(user);
+        } else {
+            throw new Exception("Email" + userRequestDTO.getEmail() + "existed");
         }
-        user.setRoles(roles);
-        return userRepo.save(user);
     }
 
     @Override
@@ -84,12 +93,13 @@ public class UserServiceImpl implements UserService {
         User user = getUserById(userId);
 
         user.setName(userRequestDTO.getName());
-        user.setAge(userRequestDTO.getAge());
-        user.setEmail(userRequestDTO.getEmail());
+        user.setPhone(userRequestDTO.getPhone());
+        user.setAddress(userRequestDTO.getAddress());
+//        user.setEmail(userRequestDTO.getEmail());
 //        user.setPassword(userRequestDTO.getPassword());
         Set<Role> roles = new HashSet<>();
-        for (Integer roleId : userRequestDTO.getRoles()) {
-            Role role = roleService.findRoleById(roleId);
+        for (String roleName : userRequestDTO.getRoles()) {
+            Role role = roleService.findRoleByName(roleName);
             roles.add(role);
         }
         user.setRoles(roles);
@@ -97,10 +107,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String deleteUser(Integer userId) {
+    public void deleteUser(Integer userId) {
         User existingUser = getUserById(userId);
         userRepo.delete(existingUser);
-        return "User with userId: " + userId + " deleted successfully !!!";
-
     }
 }

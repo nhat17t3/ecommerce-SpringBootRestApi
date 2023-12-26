@@ -23,21 +23,17 @@ public class RefreshTokenService {
     }
 
     public RefreshToken createRefreshToken(User user) {
-
         Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByUser(user);
 
+        RefreshToken refreshToken;
         if (optionalRefreshToken.isPresent()) {
-            RefreshToken refreshToken = optionalRefreshToken.get();
-            refreshToken.setToken(UUID.randomUUID().toString());
-            refreshToken = refreshTokenRepository.save(refreshToken);
-            return refreshToken;
+            refreshToken = optionalRefreshToken.get();
         } else {
-            RefreshToken refreshToken = new RefreshToken();
+            refreshToken = new RefreshToken();
             refreshToken.setUser(user);
-            refreshToken.setToken(UUID.randomUUID().toString());
-            refreshToken = refreshTokenRepository.save(refreshToken);
-            return refreshToken;
         }
+        refreshToken.setToken(UUID.randomUUID().toString());
+        return refreshTokenRepository.save(refreshToken);
     }
 
     public void deleteByUser(User user) {

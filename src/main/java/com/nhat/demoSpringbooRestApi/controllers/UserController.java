@@ -1,15 +1,15 @@
 package com.nhat.demoSpringbooRestApi.controllers;
 
-import com.nhat.demoSpringbooRestApi.configs.AppConstants;
-import com.nhat.demoSpringbooRestApi.dtos.UserListResponseDTO;
+import com.nhat.demoSpringbooRestApi.dtos.BaseResponse;
+import com.nhat.demoSpringbooRestApi.dtos.DataTableResponseDTO;
+import com.nhat.demoSpringbooRestApi.dtos.UserFilterRequestDTO;
 import com.nhat.demoSpringbooRestApi.dtos.UserRequestDTO;
 import com.nhat.demoSpringbooRestApi.models.User;
 import com.nhat.demoSpringbooRestApi.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,49 +19,41 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("")
-    public ResponseEntity<UserListResponseDTO> getAllUsers(
-            @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
-            @RequestParam(name = "sortBy", defaultValue = AppConstants.SORT_USERS_BY, required = false) String sortBy,
-            @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR, required = false) String sortOrder) {
-
-        UserListResponseDTO userResponse = userService.getAllUsers(pageNumber, pageSize, sortBy, sortOrder);
-
-        return new ResponseEntity<UserListResponseDTO>(userResponse, HttpStatus.OK);
+    @PostMapping("/list")
+    public ResponseEntity<BaseResponse> getAllUsers(UserFilterRequestDTO userFilterRequestDTO) {
+        DataTableResponseDTO<User> users = userService.getAllUsers(userFilterRequestDTO);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("user.success.getAll", users);
+        return ResponseEntity.status(200).body(baseResponse);
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
+    public ResponseEntity<BaseResponse> getUserById(@PathVariable Integer userId) {
 
         User user = userService.getUserById(userId);
-
-        return new ResponseEntity<User>(user, HttpStatus.OK);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("user.success.getById", user);
+        return ResponseEntity.status(200).body(baseResponse);
     }
 
     @PostMapping("")
-    public ResponseEntity<User> addUser(@Valid @RequestBody UserRequestDTO user) {
-
+    public ResponseEntity<BaseResponse> addUser(@Valid @RequestBody UserRequestDTO user) throws Exception {
         User savedUser = userService.registerUser(user);
-
-        return new ResponseEntity<User>(savedUser, HttpStatus.CREATED);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("user.success.create", savedUser);
+        return ResponseEntity.status(201).body(baseResponse);
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<User> updateUser(@PathVariable Integer userId, @Valid @RequestBody UserRequestDTO user) {
-
-        User savedUser = userService.updateUser(userId,user);
-
-        return new ResponseEntity<User>(savedUser, HttpStatus.OK);
+    public ResponseEntity<BaseResponse> updateUser(@PathVariable Integer userId, @Valid @RequestBody UserRequestDTO user) {
+        User savedUser = userService.updateUser(userId, user);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("user.success.update", savedUser);
+        return ResponseEntity.status(200).body(baseResponse);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{userId}")
-    public ResponseEntity<String> deleteUser(@PathVariable Integer userId) {
-
-        String message = userService.deleteUser(userId);
-
-        return new ResponseEntity<String>(message, HttpStatus.OK);
+    public ResponseEntity<BaseResponse> deleteUser(@PathVariable Integer userId) {
+        userService.deleteUser(userId);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("user.success.delete");
+        return ResponseEntity.status(200).body(baseResponse);
     }
-
 
 }

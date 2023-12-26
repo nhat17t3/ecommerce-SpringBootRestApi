@@ -4,10 +4,12 @@ package com.nhat.demoSpringbooRestApi.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,10 +22,13 @@ import java.util.Set;
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private  int id;
 
-    @NotBlank
-    @Size(min = 5, message = "Role name must contain atleast 5 characters")
+    @Column(name = "name", length = 50, nullable = false)
+    @NotNull(message = "{error.role.name.null}")
+    @NotBlank(message = "{error.role.name.blank}")
+    @Size(min = 1, max = 50, message = "{error.role.name.size")
     private String name;
 
 //    @JsonIgnore
@@ -34,7 +39,6 @@ public class Role {
     @JoinTable(name = "role_permission",
             joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "id"))
-    private Set<Permission> permissions = new HashSet<>();
-
+    private Set<Permission> permissions;
 
 }

@@ -14,7 +14,6 @@ import java.util.List;
 @Repository
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Integer> {
 //    List<OrderDetail> findByOrderId(int orderId);
-
     @Query( value = "delete from OrderDetail ud where ud.orderId = ?1" , nativeQuery = true)
     void deleteOrderDetailByOrderId (int orderId);
 }

@@ -18,11 +18,10 @@ public class MinioConfig {
     public MinioClient generateMinioClient() {
         try {
 //            MinioClient client = new MinioClient(minioUrl, accessKey, accessSecret);
-            MinioClient client = MinioClient.builder()
+            return MinioClient.builder()
                     .credentials(accessKey, accessSecret)
                     .endpoint(minioUrl)
                     .build();
-            return client;
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }

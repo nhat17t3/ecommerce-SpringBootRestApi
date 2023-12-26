@@ -27,47 +27,41 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @NotBlank
-    @Size(min = 3, message = "Product name must contain atleast 3 characters")
+    @Column(name = "name", nullable = false)
+    @NotNull(message = "{error.product.name.null}")
+    @NotBlank(message = "{error.product.name.blank}")
+    @Size(max = 255, message = "{error.product.name.size}")
     private String name;
 
-//    @NotBlank
-    private float price;
+    @Column(name = "price")
+    @NotNull(message = "{error.product.price.null}")
+    private Float price;
 
+    @Column(name = "short_description")
+    private String shortDescription;
+
+    @Column(name = "description", columnDefinition = "LONGBLOB")
     private String description;
 
-//    private  String imagePrimary;
+    @Column(name = "inStock")
+    private Integer inStock;
 
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "category_id", referencedColumnName = "id")
-    private Category category;
+    @Column(name = "isActive")
+    private Boolean isActive = true;
 
-
-//    @JsonIgnore
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    private List<Comment> comments;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "product", cascade =  CascadeType.ALL )
-    private Set<OrderDetail> orderDetails;
-
-//    @JsonManagedReference
-    @OneToMany(mappedBy = "product", cascade =  CascadeType.ALL )
+    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true )
     private List<Image> images ;
 
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//        Product product = (Product) o;
-//        return id == product.id && Float.compare(product.price, price) == 0 && Objects.equals(name, product.name) && Objects.equals(description, product.description) && Objects.equals(category, product.category) && Objects.equals(comments, product.comments) && Objects.equals(orderDetails, product.orderDetails) && Objects.equals(images, product.images);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(id, name, price, description, category, comments, orderDetails, images);
-//    }
+    @NotNull(message = "{error.product.category_id.null}")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id", referencedColumnName = "id",nullable = false)
+    private Category category;
 
+//    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//    private List<Comment> comments;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "product", cascade =  CascadeType.ALL , fetch = FetchType.LAZY)
+    private Set<OrderDetail> orderDetails;
 
 }

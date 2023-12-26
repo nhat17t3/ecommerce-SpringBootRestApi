@@ -1,5 +1,6 @@
 package com.nhat.demoSpringbooRestApi.services.impl;
 
+import com.nhat.demoSpringbooRestApi.models.EPaymentStatus;
 import com.nhat.demoSpringbooRestApi.services.OrderService;
 import com.paypal.api.payments.*;
 import com.paypal.base.rest.APIContext;
@@ -15,19 +16,15 @@ import java.util.List;
 @Service
 public class PayPalService {
 
-    private APIContext apiContext;
-
-    @Value("${paypal.client.id}")
-    private String clientId;
-
-    @Value("${paypal.client.secret}")
-    private String clientSecret;
-
-    @Value("${paypal.mode}")
-    private String mode;
-
     @Autowired
     OrderService orderService;
+    private APIContext apiContext;
+    @Value("${paypal.client.id}")
+    private String clientId;
+    @Value("${paypal.client.secret}")
+    private String clientSecret;
+    @Value("${paypal.mode}")
+    private String mode;
 
     @PostConstruct
     public void init() {
@@ -70,7 +67,7 @@ public class PayPalService {
     }
 
 
-    public void confirmPayment(String paymentId, String payerId , int orderId) throws PayPalRESTException {
+    public void confirmPayment(String paymentId, String payerId, int orderId) throws PayPalRESTException {
         Payment payment = new Payment();
         payment.setId(paymentId);
         PaymentExecution paymentExecute = new PaymentExecution();
@@ -78,7 +75,7 @@ public class PayPalService {
         Payment confirmedPayment = payment.execute(apiContext, paymentExecute);
 
         if ("approved".equals(confirmedPayment.getState().toLowerCase())) {
-            orderService.updatePaymentStatus(orderId,"PAID"); // giả định rằng bạn sử dụng paymentId như ID đơn hàng
+            orderService.updatePaymentStatus(orderId, EPaymentStatus.PAID); // giả định rằng bạn sử dụng paymentId như ID đơn hàng
         }
     }
 

@@ -19,7 +19,7 @@ import java.util.Set;
 public class OrderRequestDTO {
 
     @NotNull
-    private int userId;
+    private Integer userId;
 
     @NotNull
     private Float totalPrice;
@@ -28,10 +28,10 @@ public class OrderRequestDTO {
     private String orderStatus;
 
     @NotNull
-    private int paymentMethodId;
+    private Integer paymentMethodId;
 
 
-    private String paymentStatus;
+    private EPaymentStatus paymentStatus;
 
 //    private EPaymentStatus paymentStatus;
 

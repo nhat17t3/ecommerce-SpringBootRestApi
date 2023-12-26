@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TrackingOrderRequestDTO {
 
-    private String trackingNumber;
+    private String tracking_number;
 
-    private String[] courierCode;
+    private String courier_code;
 
 }

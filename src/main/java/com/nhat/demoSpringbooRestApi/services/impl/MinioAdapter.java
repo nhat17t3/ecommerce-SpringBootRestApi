@@ -4,22 +4,17 @@ import io.minio.*;
 import io.minio.errors.*;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
-import io.minio.messages.DeleteError;
-import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
-import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.time.Clock;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -98,22 +93,6 @@ public class MinioAdapter {
         return null;
     }
 
-    @SneakyThrows
-    public Iterable<Result<Item>> listObjects(String bucketName, String prefix) {
-        boolean flag = bucketExists(bucketName);
-        if (flag) {
-            return minioClient.listObjects(
-                    ListObjectsArgs.builder()
-                            .bucket(bucketName)
-                            .prefix(prefix)
-                            .includeUserMetadata(false)
-                            .recursive(true)
-                            .build());
-        }
-        return null;
-    }
-
-
 
     /**
      * Upload files  * * @param bucketName * @param multipartFile
@@ -182,24 +161,6 @@ public class MinioAdapter {
                     StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
         }
         return null;
-    }
-
-    @SneakyThrows
-    public boolean removeObject(String bucketName, List<String> objectNames) {
-        boolean flag = bucketExists(bucketName);
-        if (flag) {
-            List<DeleteObject> objects = new LinkedList<>();
-            for (int i = 0; i < objectNames.size(); i++) {
-                objects.add(new DeleteObject(objectNames.get(i)));
-            }
-            Iterable<Result<DeleteError>> results =
-                    minioClient.removeObjects(
-                            RemoveObjectsArgs.builder().bucket(bucketName).objects(objects).build());
-            for (Result<DeleteError> result : results) {
-                result.get();
-            }
-        }
-        return true;
     }
 
 

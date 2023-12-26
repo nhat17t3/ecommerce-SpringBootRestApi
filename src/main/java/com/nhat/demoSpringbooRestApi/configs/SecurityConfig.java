@@ -1,7 +1,7 @@
 package com.nhat.demoSpringbooRestApi.configs;
 
 import com.nhat.demoSpringbooRestApi.security.JWTFilter;
-import com.nhat.demoSpringbooRestApi.services.impl.UserDetailsServiceImpl;
+import com.nhat.demoSpringbooRestApi.security.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -16,15 +16,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-
-import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -42,37 +39,32 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-            http.csrf()
-                .disable().cors().and()
-                .authorizeHttpRequests()
+            http
+                .csrf().disable()
+                .cors()
+                .and().authorizeHttpRequests()
                 .requestMatchers(AppConstants.PUBLIC_URLS).permitAll()
                 .requestMatchers(AppConstants.USER_URLS).hasAnyAuthority("USER", "ADMIN")
                 .requestMatchers(AppConstants.ADMIN_URLS).hasAuthority("ADMIN")
                 .anyRequest()
                 .authenticated()
-                .and()
-                .exceptionHandling().authenticationEntryPoint(
+                .and().exceptionHandling().authenticationEntryPoint(
                         (request, response, authException) ->
                                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
             http.oauth2Login(Customizer.withDefaults());
-
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-        http.authenticationProvider(daoAuthenticationProvider());
+            http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+            http.authenticationProvider(daoAuthenticationProvider());
 
         DefaultSecurityFilterChain defaultSecurityFilterChain = http.build();
-
         return defaultSecurityFilterChain;
     }
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-
         provider.setUserDetailsService(userDetailsServiceImpl);
         provider.setPasswordEncoder(passwordEncoder());
-
         return provider;
     }
 
@@ -97,7 +89,7 @@ public class SecurityConfig {
 //        config.addAllowedOrigin("https://hoanglongnhat-totnghiep-reactjs-user.vercel.app");
 //        config.addAllowedOrigin("https://hoanglongnhat-totnghiep-reactjs-admin.vercel.app");
         config.addAllowedOrigin("http://localhost:3000");
-
+        config.addAllowedOrigin("http://localhost:3001");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

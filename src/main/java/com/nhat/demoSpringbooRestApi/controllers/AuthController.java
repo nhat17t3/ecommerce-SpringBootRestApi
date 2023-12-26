@@ -1,17 +1,15 @@
 package com.nhat.demoSpringbooRestApi.controllers;
 
-import com.nhat.demoSpringbooRestApi.dtos.LoginRequestDTO;
-import com.nhat.demoSpringbooRestApi.dtos.LoginResponseDTO;
-import com.nhat.demoSpringbooRestApi.dtos.UserRequestDTO;
+import com.nhat.demoSpringbooRestApi.dtos.*;
 import com.nhat.demoSpringbooRestApi.exceptions.ResourceNotFoundException;
 import com.nhat.demoSpringbooRestApi.models.RefreshToken;
 import com.nhat.demoSpringbooRestApi.models.User;
 import com.nhat.demoSpringbooRestApi.repositories.UserRepo;
 import com.nhat.demoSpringbooRestApi.security.JWTUtil;
+import com.nhat.demoSpringbooRestApi.security.UserDetailsServiceImpl;
 import com.nhat.demoSpringbooRestApi.services.Oauth2Service;
 import com.nhat.demoSpringbooRestApi.services.UserService;
 import com.nhat.demoSpringbooRestApi.services.impl.RefreshTokenService;
-import com.nhat.demoSpringbooRestApi.services.impl.UserDetailsServiceImpl;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,14 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Collections;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,54 +27,42 @@ import java.util.Map;
 public class AuthController {
 
     @Autowired
+    RefreshTokenService refreshTokenService;
+    @Autowired
     private UserService userService;
-
     @Autowired
     private JWTUtil jwtUtil;
-
     @Autowired
     private AuthenticationManager authenticationManager;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-
     @Autowired
     private Oauth2Service oauth2Service;
-
     @Autowired
     private UserDetailsServiceImpl userDetailsServiceImpl;
-
-    @Autowired
-    RefreshTokenService refreshTokenService;
-
     @Autowired
     private UserRepo userRepo;
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> registerHandler(@Valid @RequestBody UserRequestDTO user) throws ResourceNotFoundException {
-        String encodedPass = passwordEncoder.encode(user.getPassword());
+    public ResponseEntity<BaseResponse> registerHandler(@Valid @RequestBody UserRequestDTO userRequestDTO) throws Exception {
+        String encodedPass = passwordEncoder.encode(userRequestDTO.getPassword());
+        userRequestDTO.setPassword(encodedPass);
+        User user = userService.registerUser(userRequestDTO);
+        String token = jwtUtil.generateToken(user.getEmail());
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("register successful", token);
+        return ResponseEntity.status(200).body(baseResponse);
 
-        System.out.println(encodedPass);
-        user.setPassword(encodedPass);
-
-        User userDTO = userService.registerUser(user);
-
-        String token = jwtUtil.generateToken(userDTO.getEmail());
-
-        return new ResponseEntity<Map<String, Object>>(Collections.singletonMap("jwt-token", token),
-                HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginHandler(@Valid @RequestBody LoginRequestDTO credentials) {
+    public ResponseEntity<BaseResponse> loginHandler(@Valid @RequestBody LoginRequestDTO credentials) {
 
         UsernamePasswordAuthenticationToken authCredentials = new UsernamePasswordAuthenticationToken(
                 credentials.getEmail(), credentials.getPassword());
         authenticationManager.authenticate(authCredentials);
 
         // UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(credentials.getEmail());
-        User user = userRepo.findByEmail(credentials.getEmail());
+        User user = userService.getUserByEmail(credentials.getEmail());
 
         // Create a AccessToken
         String token = jwtUtil.generateToken(credentials.getEmail());
@@ -90,55 +71,53 @@ public class AuthController {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
         LoginResponseDTO loginResponseDTO = new LoginResponseDTO(user.getId(), token, refreshToken.getToken());
-        return ResponseEntity.ok(loginResponseDTO);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("login successful", loginResponseDTO);
+        return ResponseEntity.status(200).body(baseResponse);
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshAndGetAuthenticationToken( @RequestBody LoginRequestDTO loginRequestDTO) {
+    public ResponseEntity<BaseResponse> refreshAndGetAuthenticationToken(@RequestBody LoginRequestDTO loginRequestDTO) {
 //        String accessToken = authService.refreshToken(request);
         return refreshTokenService.findByToken(loginRequestDTO.getRefreshToken())
                 .map(refreshToken -> {
                     User user = refreshToken.getUser();
-
-                    // Issue a new access token
+                    // Generate a new access token
                     final String jwt = jwtUtil.generateToken(user.getEmail());
                     LoginResponseDTO loginResponseDTO = new LoginResponseDTO(user.getId(), jwt, refreshToken.getToken());
-                    return ResponseEntity.ok(loginResponseDTO);
+                    BaseResponse baseResponse = BaseResponse.createSuccessResponse("refresh-token successful", loginResponseDTO);
+                    return ResponseEntity.status(200).body(baseResponse);
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid refresh token"));
     }
 
     @PostMapping("/getMyUserInfor")
-    public ResponseEntity<?> getInformationUser(@RequestBody LoginRequestDTO loginRequestDTO) {
-
+    public ResponseEntity<BaseResponse> getInformationUser(@RequestBody LoginRequestDTO loginRequestDTO) {
         String email = jwtUtil.validateTokenAndRetrieveSubject(loginRequestDTO.getAccessToken());
-
-        User user = userRepo.findByEmail(email);
-
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        User user = userService.getUserByEmail(email);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("get information user successful", user);
+        return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestParam String refreshToken) {
+    public ResponseEntity<BaseResponse> logout(@RequestParam String refreshToken) {
         refreshTokenService.revokeRefreshToken(refreshToken);
-        return ResponseEntity.ok().body("Logged out successfully");
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("Logged out successfully");
+        return ResponseEntity.ok().body(baseResponse);
     }
 
-    @GetMapping("/oauth2/login-success")
-    public ResponseEntity<?> handleOAuth2LoginSuccess(String providerName, Map<String, Object> attributes) {
-
-            // Process user info from OAuth2 provider
-            User user = oauth2Service.processOAuth2User(providerName, attributes);
-
-            // Process access and refresh tokens
-            oauth2Service.processOAuth2Tokens(providerName, attributes, user);
-
-            // Generate JWT token for user
-            UsernamePasswordAuthenticationToken userAuthentication =
-                    new UsernamePasswordAuthenticationToken(user, null);
-            String jwt = jwtUtil.generateToken(user.getEmail());
-
-            return ResponseEntity.ok(jwt);
+    @PostMapping("/oauth2/login-success")
+    public ResponseEntity<BaseResponse> handleOAuth2LoginSuccess(@RequestBody O2authRequestDTO o2authRequestDTO) {
+        // Process user info from OAuth2 provider
+        User user = oauth2Service.processOAuth2User(o2authRequestDTO);
+        // Process access and refresh tokens
+        RefreshToken refreshToken = oauth2Service.processOAuth2Tokens(o2authRequestDTO, user);
+        // Generate JWT token for user
+        UsernamePasswordAuthenticationToken userAuthentication =
+                new UsernamePasswordAuthenticationToken(user, null);
+        String accessToken = jwtUtil.generateToken(user.getEmail());
+        LoginResponseDTO loginResponseDTO = new LoginResponseDTO(user.getId(), accessToken, refreshToken.getToken());
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("login o2auth successful", loginResponseDTO);
+        return ResponseEntity.ok(baseResponse);
     }
 
 //    @GetMapping("/oauth2/login-success")
@@ -169,4 +148,18 @@ public class AuthController {
 //            throw new IllegalArgumentException("Expected OAuth2AuthenticationToken, but got " + authentication);
 //        }
 //    }
+
+    @PostMapping("/updatePassword")
+    public ResponseEntity<BaseResponse> changeUserPassword(@RequestParam String newPassword, @RequestParam String oldPassword) {
+        User user = userService.getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+        if (passwordEncoder.matches(oldPassword, user.getPassword())) {
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepo.save(user);
+            BaseResponse baseResponse = BaseResponse.createSuccessResponse("update password successful");
+            return ResponseEntity.ok(baseResponse);
+        } else {
+            BaseResponse baseResponse = BaseResponse.createErrorResponse("update password");
+            return ResponseEntity.status(400).body(baseResponse);
+        }
+    }
 }

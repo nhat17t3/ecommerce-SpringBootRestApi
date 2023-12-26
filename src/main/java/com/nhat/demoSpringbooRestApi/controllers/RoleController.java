@@ -1,12 +1,11 @@
 package com.nhat.demoSpringbooRestApi.controllers;
 
+import com.nhat.demoSpringbooRestApi.dtos.BaseResponse;
 import com.nhat.demoSpringbooRestApi.dtos.RoleRequestDTO;
 import com.nhat.demoSpringbooRestApi.models.Role;
 import com.nhat.demoSpringbooRestApi.services.RoleService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,44 +18,38 @@ public class RoleController {
     private RoleService roleService;
 
     @GetMapping
-    public ResponseEntity<List<Role>> getAllCategories() {
+    public ResponseEntity<BaseResponse> getAllRoles() {
         List<Role> roles = roleService.getAllRoles();
-        return ResponseEntity.ok(roles);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("role.success.getAll", roles);
+        return ResponseEntity.status(200).body(baseResponse);
     }
 
-    @GetMapping("/{id_1}")
-    public ResponseEntity<Role> findRoleById(@PathVariable("id_1") int id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<BaseResponse> findRoleById(@PathVariable("id") int id) {
         Role role = roleService.findRoleById(id);
-        return ResponseEntity.ok(role);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("role.success.getById", role);
+        return ResponseEntity.status(200).body(baseResponse);
     }
-
-//    @GetMapping("/search")
-//    public ResponseEntity<List<Role>> findRoleByName(@RequestParam(value="name", required=true) String key) {
-//        List<Role> roles = roleService.findRoleByName(key);
-//        return ResponseEntity.ok(roles);
-//    }
 
     @PostMapping
-    public ResponseEntity<Role> createRole(@Valid @RequestBody  RoleRequestDTO requestDTO) {
-        Role role = new Role();
-        role.setName(requestDTO.getName());
-
-        Role createdRole = roleService.createRole(role);
-
-        return ResponseEntity.ok(createdRole);
+    public ResponseEntity<BaseResponse> createRole(@Valid @RequestBody RoleRequestDTO requestDTO) {
+        Role createdRole = roleService.createRole(requestDTO);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("role.success.create", createdRole);
+        return ResponseEntity.status(201).body(baseResponse);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Role> updateRole(@PathVariable int id, @Valid @RequestBody Role role) {
-        Role updatedRole = roleService.updateRole(id, role);
-        return ResponseEntity.ok(updatedRole);
+    public ResponseEntity<BaseResponse> updateRole(@PathVariable int id, @Valid @RequestBody RoleRequestDTO requestDTO) {
+        Role updatedRole = roleService.updateRole(id, requestDTO);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("role.success.update", updatedRole);
+        return ResponseEntity.status(200).body(baseResponse);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteRole(@PathVariable int id) {
-        String message = roleService.deleteRole(id);
-        return ResponseEntity.status(HttpStatus.OK).body(message);
+    public ResponseEntity<BaseResponse> deleteRole(@PathVariable int id) {
+        roleService.deleteRole(id);
+        BaseResponse baseResponse = BaseResponse.createSuccessResponse("role.success.delete");
+        return ResponseEntity.status(200).body(baseResponse);
     }
-
 
 }

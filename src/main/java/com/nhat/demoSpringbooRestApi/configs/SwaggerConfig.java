@@ -13,7 +13,6 @@ import io.swagger.v3.oas.models.info.License;
 
 @Configuration
 public class SwaggerConfig {
-
     @Bean
     public ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
@@ -21,7 +20,6 @@ public class SwaggerConfig {
                 .setMatchingStrategy(MatchingStrategies.STRICT);
         return modelMapper;
     }
-
     @Bean
     public OpenAPI springShopOpenAPI() {
         return new OpenAPI().info(new Info().title("Demo Rest API spring boot")

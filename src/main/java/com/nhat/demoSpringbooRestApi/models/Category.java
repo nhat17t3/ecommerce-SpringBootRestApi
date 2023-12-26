@@ -3,9 +3,16 @@ package com.nhat.demoSpringbooRestApi.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.ArrayList;
 import java.util.List;
+
+
+/**
+ * Persistent class for entity stored in table "category"
+ */
 
 @Entity
 @Table(name= "category")
@@ -13,27 +20,33 @@ public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private int id;
 
-    @NotBlank
-    @Size(min = 5, message = "Category name must contain atleast 5 characters")
+    @Column(name = "name",length = 100,nullable = false)
+    @NotNull(message = "{error.category.name.null}")
+    @NotBlank(message = "{error.category.name.blank}")
+    @Size(max = 100, message = "{error.category.name.size}")
     private String name;
 
-//    @NotBlank
-//    @Size(min = 5, message = "Category code must contain atleast 5 characters")
-    private String code;
+//    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+//    @JoinColumn(name="parent_id", referencedColumnName="id", nullable = true)
+//    private Category parent;
+//
+//    @OneToMany(cascade = CascadeType.ALL,orphanRemoval = true, fetch = FetchType.LAZY)
+//    @JoinColumn(name="parent_id")
+//    private List<Category> children;
+
 
     @JsonIgnore
-    @OneToMany(mappedBy = "category", cascade =  CascadeType.ALL )
-    private List<Product> products;
+    @OneToMany(mappedBy = "category", cascade =  CascadeType.ALL , fetch = FetchType.LAZY)
+    private List<Product> products = new ArrayList<>();
 
     public Category() {
     }
 
-    public Category(int id, String name, String code) {
-        this.id = id;
+    public Category(@NotNull(message = "{error.category.name.null}") String name) {
         this.name = name;
-        this.code = code;
     }
 
     public int getId() {
@@ -52,13 +65,6 @@ public class Category {
         this.name = name;
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
 
     public List<Product> getProducts() {
         return products;

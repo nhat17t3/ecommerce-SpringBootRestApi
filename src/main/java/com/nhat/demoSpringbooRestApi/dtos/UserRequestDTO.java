@@ -20,14 +20,18 @@ public class UserRequestDTO {
     @NotBlank
     private String name;
 
-    private int age;
+    @NotBlank
+    private String phone;
 
+    @NotBlank
     @Email
     private String email;
 
     @NotBlank
     private String password;
 
+    private String address;
+
     @NotEmpty
-    private Set<Integer> roles = new HashSet<>();
+    private Set<String> roles = new HashSet<>();
 }

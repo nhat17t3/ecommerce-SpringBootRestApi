@@ -1,15 +1,19 @@
 package com.nhat.demoSpringbooRestApi.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.trackingmore.model.tracking.TrackInfo;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 
 @Entity
@@ -23,43 +27,59 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @NotNull
+    @Column(name = "nameReceiver", nullable = false)
+    @NotNull(message = "{error.order.nameReceiver.null}")
+    @NotBlank(message = "{error.order.nameReceiver.blank}")
+    private String nameReceiver;
+
+    @Column(name = "phoneReceiver", nullable = false)
+    @NotNull(message = "{error.order.phoneReceiver.null}")
+    @NotBlank(message = "{error.order.phoneReceiver.blank}")
+    private String phoneReceiver;
+
+    @Column(name = "addressReceiver", nullable = false)
+    @NotNull(message = "{error.order.addressReceiver.null}")
+    @NotBlank(message = "{error.order.addressReceiver.blank}")
+    private String addressReceiver;
+
+    @Column(name = "totalPrice")
+    private Float totalPrice;
+
+    @Column(name = "paymentStatus")
+    @Enumerated(EnumType.STRING)
+    private EPaymentStatus paymentStatus;
+
+    @Column(name = "orderStatus")
+    private String orderStatus;
+
+    @Column(name = "trackingNumber")
+    private String trackingNumber;
+
+    @Column(name = "trackerId")
+    private String trackerId;
+
+    @Column(name = "created_at")
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
+
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
-    private String nameReceiver;
-
-    private String phoneReceiver;
-
-    private String addressReceiver;
-
-    private Float totalPrice;
-
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "paymentMethod_id", referencedColumnName = "id")
+    @ManyToOne( fetch = FetchType.EAGER)
+    @NotNull(message = "{error.order.paymentMethod.null}")
+    @JoinColumn(name = "paymentMethod_id", referencedColumnName = "id", nullable = false)
     private PaymentMethod paymentMethod;
 
-    private String paymentStatus;
-
-//    private EPaymentStatus paymentStatus;
-
-    @OneToMany(mappedBy = "order", cascade =  CascadeType.ALL )
+    @OneToMany(mappedBy = "order", cascade =  CascadeType.ALL , fetch = FetchType.EAGER)
     private List<OrderDetail> orderDetails;
 
-    private String orderStatus;
-
-    private String trackingNumber;
-
-    private String trackerId;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-
+//    @OneToMany
+//    private List<TrackInfo> trackInfo;
 
 }

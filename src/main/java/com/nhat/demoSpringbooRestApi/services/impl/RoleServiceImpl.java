@@ -1,5 +1,6 @@
 package com.nhat.demoSpringbooRestApi.services.impl;
 
+import com.nhat.demoSpringbooRestApi.dtos.RoleRequestDTO;
 import com.nhat.demoSpringbooRestApi.exceptions.ResourceNotFoundException;
 import com.nhat.demoSpringbooRestApi.models.Role;
 import com.nhat.demoSpringbooRestApi.repositories.RoleRepo;
@@ -30,22 +31,23 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public Role createRole(Role role) {
+    public Role createRole(RoleRequestDTO roleRequestDTO) {
+        Role role = new Role();
+        role.setName(roleRequestDTO.getName());
         return roleRepo.save(role);
     }
 
     @Override
-    public Role updateRole(int roleId, Role role) {
+    public Role updateRole(int roleId, RoleRequestDTO roleRequestDTO) {
         Role existingRole = findRoleById(roleId);
-        existingRole.setName(role.getName());
+        existingRole.setName(roleRequestDTO.getName());
         return roleRepo.save(existingRole);
     }
 
     @Override
-    public String deleteRole(int roleId) {
+    public void deleteRole(int roleId) {
         Role existingRole = findRoleById(roleId);
         roleRepo.delete(existingRole);
-        return "role has id =" + roleId + ": is deleted";
     }
 
 }

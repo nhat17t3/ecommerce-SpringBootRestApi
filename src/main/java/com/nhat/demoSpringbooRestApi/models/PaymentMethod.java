@@ -25,15 +25,17 @@ public class PaymentMethod {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @NotBlank
-    @Size(min = 3, message = "PaymentMethod name must contain atleast 3 characters")
+    @Column(name = "name",length = 100)
+    @NotNull(message = "{error.payment_method.name.null}")
+    @NotBlank(message = "{error.payment_method.name.blank}")
+    @Size(max = 100, message = "{error.payment_method.name.size}")
     private String name;
 
-
+    @Column(name = "description")
     private String description;
 
+    @Column(name = "isEnable")
     private Boolean isEnable;
-
 
     @JsonIgnore
     @OneToMany(mappedBy = "paymentMethod" )
